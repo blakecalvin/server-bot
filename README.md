@@ -1,7 +1,4 @@
-# Discord SSH Bot
-This is a simple bot for using shell commands within Discord.
-
-This bot does not use an actual SSH connection. It's named like this because it acts in a similar way to SSH, in that you can use a shell on your computer from a remote location.
+# Server-Bot
 
 ## Setup
 _Only required for first run_
