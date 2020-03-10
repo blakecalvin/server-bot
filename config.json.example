@@ -1,0 +1,13 @@
+{
+    "discord": {
+        "channel": "ChannelID",
+        "owner": "UserID",
+        "token": "BotToken"
+    },
+    "bot": {
+        "server_path": "path/to/server",
+        "zero_tier_token": "APItoken",
+        "network_id": "zero_tier_one_network_id",
+        "server_id": "zero_tier_one_member_id_of_server"
+    }
+}
