@@ -19,10 +19,7 @@ const options = {
 
 const emoji = {
 	online = "🟢",
-	offline = "🔴",
-	active = "😄",
-	sleep = "😴",
-	dead = "💀"
+	offline = "🔴"
 }
 
 client.on("message", msg => {
@@ -53,10 +50,10 @@ client.on("message", msg => {
 				\t\t├─ help\t\t: usage/command list
 				\t\t├─ info\t\t: show server info (Name, ID, IPv4)
 				\t\t├─ list [target]
-				\t\t\t\t\t├─ worlds\t: show current and available worlds
-				\t\t\t\t\t└─ users\t: show server members
+				\t\t│\t\t\t├─ worlds\t: show current and available worlds
+				\t\t│\t\t\t└─ users\t: show server members
 				\t\t├─ set [target]
-				\t\t\t\t\t└─ worlds\t: set current world
+				\t\t│\t\t\t└─ worlds\t: set current world
 				\t\t├─ start\t: start server
 				\t\t├─ status\t: show server status, IP address, current world and online members
 				\t\t└─ stop\t\t: stop server`;
@@ -68,7 +65,7 @@ client.on("message", msg => {
 				INFO:
 				Name	: server
 				ID		: a23j2323j
-				IPv4	: 10.0.200.0.1
+				IPv4	: 10.192.168.0
 				*/
 				var output = getServerInfo(config);
 				if (output){
@@ -85,7 +82,12 @@ client.on("message", msg => {
 			case 'list':
 				switch (content[1]) {
 					case "worlds":
-
+						output = getWorldList(config.bot.server_path)
+						out = `Worlds:`;
+						output.foreach( (element) => {
+							output = `${output}
+							 > ${element}`;
+						});
 						break;
 					case "users":
 						out = `Users:`
@@ -117,9 +119,20 @@ client.on("message", msg => {
 			case 'set':
 				switch (content[1]) {
 					case "world":
-						
+						if (getCurrentWorld(config.bot.server_path) === content[2]){
+							/* World already set as current level */
+
+						}
+						else if (!getWorldList(config.bot.server_path).includes(content[2])){
+							/* Error world not in maps directory */
+
+						}
+						else {
+							setCurrentWorld(config.bot.server_path, content[2]);
+						}
 						break;
 					default:
+						/* Error target not recognized */
 
 						break;
 				}
@@ -140,14 +153,14 @@ client.on("message", msg => {
 				STATUS:
 				server : 🟢
 				IPv4 : 10.192.168.0
-				world : blok
+				world : map1
 				online-users : 3
-				total-users : 6
-
-				online:
-					> Blok 		: 10.192.168.1 	: (Seattle, WA, USA)
-					> Agent 	: 10.192.168.2 	: (Seattle, WA, USA)
-					> TrevBot 	: 10.192.168.3 	: (Seattle, WA, USA) 
+				total-users : 6                TODO: IP Geolocating 
+														|
+				online:									V
+					> user1 	: 10.192.168.1 	: (Seattle, WA, USA)
+					> user2 	: 10.192.168.2 	: (Seattle, WA, USA)
+					> user3 	: 10.192.168.3 	: (Seattle, WA, USA) 
 				*/
 
 				var is_online = gameServerStatus("minecraft");
@@ -162,12 +175,12 @@ client.on("message", msg => {
 					ip = 'ERROR'
 				}
 
-				
+				var currentWorld = getCurrentWorld(config.bot.server_path);
 
 				out = `STATUS:
 				Server\t: ${status}
 				IPv4\t: ${ip}
-				World\t: ${current_world}
+				World\t: ${currentWorld}
 				
 				Online:`
 
@@ -188,7 +201,11 @@ client.on("message", msg => {
 				msg.channel.send(out);
 				break;
 			case 'stop':
-
+				exec(`bash ./scripts/stop_server.sh`, (err, stdout, stderr)  => {
+					if (err) console.error(err);
+					if (stdout) msg.channel.send("```\n" + Discord.escapeMarkdown(stdout, true) + "```", options);
+					if (stderr) msg.channel.send("```\n" + Discord.escapeMarkdown(stderr, true) + "```", options);
+				});
 				break;
 			default:
 				msg.channel.send(`Error: ${cmd} is not a valid command.
@@ -242,6 +259,29 @@ function gameServerStatus(name){
 	}
 }
 
-function getCurrentWorld(){
+function getCurrentWorld(serverPath){
+	exec(`cat ${serverPath} | grep level-name | awk '{split($0,a,"/"); print a[1]}'`, (err, stdout, stderr) => {
+		if (err) return 'ERROR';
+		if (stdout) return stdout;
+		if (stderr) return 'ERROR';
+	});
+}
 
+function setCurrentWorld(serverPath, name){
+	exec(`sed -i -e "s/level-name=maps/.*/level-name=maps/${name}/g" /${serverPath}/server.properties`, (err, stdout, stderr) => {
+		if (err) return false;
+		if (stdout) return true;
+		if (stderr) return false;
+	});
+}
+
+function getWorldList(serverPath){
+	var out = "";
+	exec(`ls ${serverPath}/maps/`, (err, stdout, stderr) => {
+		if (err) return [];
+		if (stdout) out = stdout;
+		if (stderr) return [];
+	});
+	out = out.split("\n");
+	return out;
 }
