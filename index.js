@@ -75,7 +75,7 @@ client.on("message", msg => {
 					IPv4	: ${out.ipAssignments[0]}`;
 				}
 				else {
-					out = '[ERROR] Request failed.';
+					out = '[Error] Request failed.';
 				}
 				msg.channel.send(out);
 				break;
@@ -84,10 +84,16 @@ client.on("message", msg => {
 					case "worlds":
 						output = getWorldList(config.bot.server_path)
 						out = `Worlds:`;
-						output.foreach( (element) => {
-							output = `${output}
-							 > ${element}`;
-						});
+						if (output){
+							output.foreach( (element) => {
+								output = `${output}
+								 > ${element}`;
+							});
+						}
+						else {
+							out = `${out}
+							[Error] failed to fetch worlds.`;
+						}
 						break;
 					case "users":
 						out = `Users:`
@@ -107,12 +113,14 @@ client.on("message", msg => {
 						}
 						else {
 							out = `${out}
-							ERROR`
+							[Error] failed to fetch members`
 						}
-						msg.channel.send(out);
 						break;
 					default:
+						out = `[Error] target '${content[1]}' not recognized.
+						Use '${BOT}> help' for usage.`;
 						break;
+					msg.channel.send(out);
 				}
 
 				break;
@@ -121,28 +129,34 @@ client.on("message", msg => {
 					case "world":
 						if (getCurrentWorld(config.bot.server_path) === content[2]){
 							/* World already set as current level */
-
+							out = `[Error] current world already set to '${content[2]}'`;
 						}
 						else if (!getWorldList(config.bot.server_path).includes(content[2])){
 							/* Error world not in maps directory */
-
+							out = `[Error] ${content[2]} not in 'maps' directory.`;
 						}
 						else {
-							setCurrentWorld(config.bot.server_path, content[2]);
+							res = setCurrentWorld(config.bot.server_path, content[2]);
+							if (!res){
+								out = `World set to '${content[2]}' = ${res}
+								Start/restart server to play.`;
+							}
 						}
 						break;
 					default:
 						/* Error target not recognized */
-
+						out = `[Error] target '${content[1]}' not recognized.
+						Use '${config.bot.botName}> help' for usage.`;
 						break;
+					msg.channel.send(out)
 				}
 
 				break;
 			case 'start':
 				exec(`bash ./scripts/start_server.sh ${config.bot.server_path}`, (err, stdout, stderr)  => {
 					if (err) console.error(err);
-					if (stdout) msg.channel.send("```\n" + Discord.escapeMarkdown(stdout, true) + "```", options);
-					if (stderr) msg.channel.send("```\n" + Discord.escapeMarkdown(stderr, true) + "```", options);
+					if (stdout) msg.channel.send(stdout);
+					if (stderr) msg.channel.send(stderr);
 				});
 				break;
 			case 'status':
@@ -172,7 +186,7 @@ client.on("message", msg => {
 					ip = output.getServerInfo[0];
 				}
 				else {
-					ip = 'ERROR'
+					ip = '[Error] failed to fetch IP.'
 				}
 
 				var currentWorld = getCurrentWorld(config.bot.server_path);
@@ -195,7 +209,7 @@ client.on("message", msg => {
 				}
 				else {
 					out = `${out}
-					ERROR`
+					[Error] failed to fetch members.`
 				}
 
 				msg.channel.send(out);
@@ -203,20 +217,21 @@ client.on("message", msg => {
 			case 'stop':
 				exec(`bash ./scripts/stop_server.sh`, (err, stdout, stderr)  => {
 					if (err) console.error(err);
-					if (stdout) msg.channel.send("```\n" + Discord.escapeMarkdown(stdout, true) + "```", options);
-					if (stderr) msg.channel.send("```\n" + Discord.escapeMarkdown(stderr, true) + "```", options);
+					if (stdout) out = stdout;
+					if (stderr) out = stderr;
 				});
+				msg.channel.send(out);
 				break;
 			default:
-				msg.channel.send(`Error: ${cmd} is not a valid command.
-				Use \'${config.bot.botName}> help\' for usage.`)
+				msg.channel.send(`[Error] ${cmd} is not a valid command.
+				Use '${config.bot.botName}> help' for usage.`)
 				break;
 		}
 	}
 	if (msg.channel.id === client.config.channel && msg.author.id === client.config.owner) exec(msg.content, (err, stdout, stderr) => {
 		if (err) console.error(err);
-		if (stdout) msg.channel.send("```\n" + Discord.escapeMarkdown(stdout, true) + "```", options);
-		if (stderr) msg.channel.send("```\n" + Discord.escapeMarkdown(stderr, true) + "```", options);
+		if (stdout) msg.channel.send(stdout);
+		if (stderr) msg.channel.send(stderr);
 	});
 });
 
@@ -261,9 +276,9 @@ function gameServerStatus(name){
 
 function getCurrentWorld(serverPath){
 	exec(`cat ${serverPath} | grep level-name | awk '{split($0,a,"/"); print a[1]}'`, (err, stdout, stderr) => {
-		if (err) return 'ERROR';
+		if (err) return 'Error';
 		if (stdout) return stdout;
-		if (stderr) return 'ERROR';
+		if (stderr) return `[Error] ${stderr}`;
 	});
 }
 
