@@ -1,4 +1,5 @@
 const { exec } = require('child_process');
+const execSync =  require('child_process').execSync;
 const fs = require("fs");
 const Discord = require("discord.js");
 
@@ -18,8 +19,8 @@ const options = {
 }
 
 const emoji = {
-	online = "🟢",
-	offline = "🔴"
+	online: "🟢",
+	offline: "🔴"
 }
 
 client.on("message", msg => {
@@ -45,20 +46,21 @@ client.on("message", msg => {
 						├─ status	: show server status, IP address, current world and online members
 						└─ stop		: stop server
 				*/
-				const help = `Usage:
-				${BOT}> [command]
-				\t\t├─ help\t\t: usage/command list
-				\t\t├─ info\t\t: show server info (Name, ID, IPv4)
-				\t\t├─ list [target]
-				\t\t│\t\t\t├─ worlds\t: show current and available worlds
-				\t\t│\t\t\t└─ users\t: show server members
-				\t\t├─ set [target]
-				\t\t│\t\t\t└─ worlds\t: set current world
-				\t\t├─ start\t: start server
-				\t\t├─ status\t: show server status, IP address, current world and online members
-				\t\t└─ stop\t\t: stop server`;
+				const cmds = `${BOT}> [command]
+			├─ help    : usage/command list
+			├─ info    : show server info (Name, ID, IPv4)
+			├─ list [target]
+			│         ├─ worlds  : show current and available worlds
+			│         └─ users   : show server members
+			├─ set [target]
+			│         └─ world   : set current world
+			├─ start   : start server
+			├─ status  : show server status, IP address, 
+			│ 			     current world and online members
+			└─ stop    : stop server`;
+				const help = "**Usage:** ```\n" + Discord.escapeMarkdown(cmds, true) + "```";
 
-				msg.channel.send(help);
+				msg.channel.send(help, options);
 				break;
 			case 'info':
 				/*
@@ -67,72 +69,102 @@ client.on("message", msg => {
 				ID		: a23j2323j
 				IPv4	: 10.192.168.0
 				*/
-				var output = getServerInfo(config);
-				if (output){
-					out = `__INFO:__
-					Name	: ${out.name}
-					ID		: ${out.networkId}
-					IPv4	: ${out.ipAssignments[0]}`;
-				}
-				else {
-					out = '[Error] Request failed.';
-				}
-				msg.channel.send(out);
+				exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member/${config.bot.server_id}`, (err, stdout, stderr) => {
+					var info = null;
+					if (stdout){
+						output = JSON.parse(stdout);
+						if (output){
+							info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("Name\t: "+output['name']+"\nID\t  : "+output['networkId']+"\nIPv4\t: "+output['config']['ipAssignments'][0])+"```";
+						}
+						else {
+							info = '[Error] Request failed.';
+						}
+					}
+					else if (stderr){
+						info = stderr;
+					}
+					else if (err){
+						console.log(err);
+					}
+					msg.channel.send(info);
+				});
 				break;
 			case 'list':
-				switch (content[1]) {
+				switch (content[2]) {
 					case "worlds":
-						output = getWorldList(config.bot.server_path)
-						out = `Worlds:`;
-						if (output){
-							output.foreach( (element) => {
-								output = `${output}
-								 > ${element}`;
-							});
-						}
-						else {
-							out = `${out}
-							[Error] failed to fetch worlds.`;
-						}
-						break;
-					case "users":
-						out = `Users:`
-						output = getMembers(config);
-						if (output){
-							output.foreach((element) => {
-								var status = emoji.online;
-								if (element.online){
-									status = emoji.online;
+						current = getCurrentWorld(config.bot.server_path);
+						current = current.replace(/(\r\n|\n|\r)/gm, "");
+						console.log(`current: ${current}`);
+						var worlds = `**Current World:**\n - ${current}\n**All Worlds:**`;
+						exec(`ls ${config.bot.server_path}/maps/`, (err, stdout, stderr) => {
+							if (stdout) {
+								output = stdout;
+								
+								if (output){
+									output = output.split("\n");
+									console.log(output);
+									output.forEach( element => {
+										if (element != ''){
+											element = element.replace(/(\r\n|\n|\r)/gm, "");
+											worlds = worlds + "\n - " + element;	
+										}
+									});
 								}
 								else {
-									status = emoji.offline;
+									worlds = `${worlds}
+									[Error] failed to fetch worlds.`;
 								}
-								out = `${out}
-								\t${status} > ${element.name}\t: ${element.ipAssignments[0]}`;
-							});
-						}
-						else {
-							out = `${out}
-							[Error] failed to fetch members`
-						}
+							}
+							else if (stderr) worlds = stderr;
+							else if (err) console.log(err);
+							msg.channel.send(worlds);
+						});
+						break;
+					case "users":
+						exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member`, (err, stdout, stderr) => {
+							var users = "**Users:**";
+							if (stdout){
+								output = JSON.parse(stdout);
+								if (output){
+									users = users + "```";
+									output.forEach(element => {
+										var status = emoji.online;
+										if (element.online){
+											status = emoji.online;
+										}
+										else {
+											status = emoji.offline;
+										}
+										users = users + "\n " + status + " : " + element['name'] + " : " + element['config']['ipAssignments'][0];
+									});
+									users = users + "\n```";
+								}
+								else {
+									users = users+"\n[Error] failed to fetch users.";
+								}
+							}
+							else if (stderr) users = stderr;
+							else if (err) console.log(err);
+							msg.channel.send(users);
+						});
 						break;
 					default:
-						out = `[Error] target '${content[1]}' not recognized.
-						Use '${BOT}> help' for usage.`;
+						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
+						msg.channel.send(out);
 						break;
-					msg.channel.send(out);
 				}
 
 				break;
 			case 'set':
+				/*
 				switch (content[1]) {
 					case "world":
 						if (getCurrentWorld(config.bot.server_path) === content[2]){
-							/* World already set as current level */
+							
 							out = `[Error] current world already set to '${content[2]}'`;
 						}
 						else if (!getWorldList(config.bot.server_path).includes(content[2])){
-							/* Error world not in maps directory */
+						
 							out = `[Error] ${content[2]} not in 'maps' directory.`;
 						}
 						else {
@@ -144,19 +176,18 @@ client.on("message", msg => {
 						}
 						break;
 					default:
-						/* Error target not recognized */
-						out = `[Error] target '${content[1]}' not recognized.
-						Use '${config.bot.botName}> help' for usage.`;
+						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
+						msg.channel.send(out);
 						break;
-					msg.channel.send(out)
 				}
+				*/
 
 				break;
 			case 'start':
 				exec(`bash ./scripts/start_server.sh ${config.bot.server_path}`, (err, stdout, stderr)  => {
 					if (err) console.error(err);
-					if (stdout) msg.channel.send(stdout);
-					if (stderr) msg.channel.send(stderr);
+					if (stdout) msg.channel.send("Starting server...");
+					else if (stderr) msg.channel.send(stderr);
 				});
 				break;
 			case 'status':
@@ -217,35 +248,25 @@ client.on("message", msg => {
 			case 'stop':
 				exec(`bash ./scripts/stop_server.sh`, (err, stdout, stderr)  => {
 					if (err) console.error(err);
-					if (stdout) out = stdout;
-					if (stderr) out = stderr;
+					if (stdout) msg.channel.send("Stopping server...");
+					else if (stderr) msg.channel.send(stderr);
 				});
-				msg.channel.send(out);
 				break;
 			default:
-				msg.channel.send(`[Error] ${cmd} is not a valid command.
-				Use '${config.bot.botName}> help' for usage.`)
+				out = "[Error] command `"+content[1]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
+				msg.channel.send(out);
 				break;
 		}
 	}
-	if (msg.channel.id === client.config.channel && msg.author.id === client.config.owner) exec(msg.content, (err, stdout, stderr) => {
-		if (err) console.error(err);
-		if (stdout) msg.channel.send(stdout);
-		if (stderr) msg.channel.send(stderr);
-	});
 });
 
 client.on("ready", () => console.log(`Logged in as ${client.user.tag}`));
 
 client.login(client.config.token);
 
-function getServerInfo(config){
+function getServerInfo(msg, config){
 	var output = null;
-	exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member/${config.bot.server_id}`, (err, stdout, stderr) => {
-		if (stdout){
-			output = JSON.parse(stdout);
-		}
-	});
+
 	return output
 }
 
@@ -262,11 +283,9 @@ function getMembers(config){
 function gameServerStatus(name){
 	switch (name) {
 		case "minecraft":
-			exec(`screen -ls | grep minecraft`, (err, stdout, stderr) => {
-				if (err) return false;
-				if (stdout) return true;
-				if (stderr) return false;
-			});
+			status = execSync(`screen -ls | grep minecraft`).toString();
+			console.log(status);
+			return true;
 			break;
 		default:
 			return false;
@@ -275,11 +294,8 @@ function gameServerStatus(name){
 }
 
 function getCurrentWorld(serverPath){
-	exec(`cat ${serverPath} | grep level-name | awk '{split($0,a,"/"); print a[1]}'`, (err, stdout, stderr) => {
-		if (err) return 'Error';
-		if (stdout) return stdout;
-		if (stderr) return `[Error] ${stderr}`;
-	});
+	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2]}\'`).toString();
+	return current;
 }
 
 function setCurrentWorld(serverPath, name){
@@ -292,11 +308,7 @@ function setCurrentWorld(serverPath, name){
 
 function getWorldList(serverPath){
 	var out = "";
-	exec(`ls ${serverPath}/maps/`, (err, stdout, stderr) => {
-		if (err) return [];
-		if (stdout) out = stdout;
-		if (stderr) return [];
-	});
-	out = out.split("\n");
+
+	
 	return out;
 }
