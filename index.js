@@ -156,32 +156,31 @@ client.on("message", msg => {
 
 				break;
 			case 'set':
-				/*
-				switch (content[1]) {
+				switch (content[2]) {
 					case "world":
-						if (getCurrentWorld(config.bot.server_path) === content[2]){
+						console.log(getCurrentWorld(config.bot.server_path)+" == "+content[3]);
+						console.log(getCurrentWorld(config.bot.server_path) == content[3]);
+						if (getCurrentWorld(config.bot.server_path) == content[3]){
 							
-							out = `[Error] current world already set to '${content[2]}'`;
+							out = "[Error] current world already set to `" + content[3] + "`" ;
 						}
-						else if (!getWorldList(config.bot.server_path).includes(content[2])){
+						else if (!getWorldList(config.bot.server_path).includes(content[3])){
 						
-							out = `[Error] ${content[2]} not in 'maps' directory.`;
+							out = "[Error] `"+content[3]+"` not in `maps` directory.";
 						}
 						else {
-							res = setCurrentWorld(config.bot.server_path, content[2]);
+							res = setCurrentWorld(config.bot.server_path, content[3]);
 							if (!res){
-								out = `World set to '${content[2]}' = ${res}
-								Start/restart server to play.`;
+								out = "World set to \'" + content[3] + "\'\nStart/restart server to play.";
 							}
 						}
+						msg.channel.send(out);
 						break;
 					default:
 						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
 						msg.channel.send(out);
-						break;
+						break;	
 				}
-				*/
-
 				break;
 			case 'start':
 				exec(`bash ./scripts/start_server.sh ${config.bot.server_path}`, (err, stdout, stderr)  => {
@@ -214,7 +213,7 @@ client.on("message", msg => {
 
 				output = getServerInfo(config);
 				if (output){
-					ip = output.getServerInfo[0];
+					ip = output['config']['ipAssignments'][0];
 				}
 				else {
 					ip = '[Error] failed to fetch IP.'
@@ -222,21 +221,16 @@ client.on("message", msg => {
 
 				var currentWorld = getCurrentWorld(config.bot.server_path);
 
-				out = `STATUS:
-				Server\t: ${status}
-				IPv4\t: ${ip}
-				World\t: ${currentWorld}
-				
-				Online:`
+				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nOnline:");
 
 				output = getMembers(config);
 				if (output){
-					output.foreach((element) => {
-						if (element.name != config.bot.sever_name && element.online === true) {
-							out = `${out}
-							\t> ${element.name}\t: ${element.ipAssignments[0]}`;
+					output.forEach((element) => {
+						if (element['name'] != config.bot.sever_name && element['online'] == true) {
+							out = out + "\n - "+element['name']+" : "+element['config']['ipAssignments'][0];
 						}
 					});
+					out = out + "```";
 				}
 				else {
 					out = `${out}
@@ -264,28 +258,30 @@ client.on("ready", () => console.log(`Logged in as ${client.user.tag}`));
 
 client.login(client.config.token);
 
-function getServerInfo(msg, config){
-	var output = null;
-
-	return output
+function getServerInfo(config){
+	var info = execSync(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member/${config.bot.server_id}`).toString();
+	info = JSON.parse(info);
+	return info
 }
 
 function getMembers(config){
-	var output = null;
-	exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member`, (err, stdout, stderr) => {
-		if (stdout){
-			output = JSON.parse(stdout);
-		}
-	});
-	return output
+	var members = execSync(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member`).toString();
+	members = JSON.parse(members);
+	return members;
 }
 
 function gameServerStatus(name){
 	switch (name) {
 		case "minecraft":
-			status = execSync(`screen -ls | grep minecraft`).toString();
-			console.log(status);
-			return true;
+			try {
+				status = execSync(`screen -ls | grep minecraft`).toString();
+				console.log(status);
+				return true;
+			}
+			catch(error){
+				console.error(error);
+				return false;
+			}
 			break;
 		default:
 			return false;
@@ -295,20 +291,30 @@ function gameServerStatus(name){
 
 function getCurrentWorld(serverPath){
 	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2]}\'`).toString();
+	current = current.replace(/(\r\n|\n|\r)/gm, "");
 	return current;
 }
 
 function setCurrentWorld(serverPath, name){
-	exec(`sed -i -e "s/level-name=maps/.*/level-name=maps/${name}/g" /${serverPath}/server.properties`, (err, stdout, stderr) => {
-		if (err) return false;
-		if (stdout) return true;
-		if (stderr) return false;
-	});
+	var set = execSync(`sed "s|level-name=maps/.*|level-name=maps/${name}|g" ${serverPath}/server.properties`).toString();
+	return set;
 }
 
 function getWorldList(serverPath){
-	var out = "";
-
-	
-	return out;
+	var output = execSync(`ls ${serverPath}/maps/`).toString();
+	var worlds = null;
+	if (output){
+		output = output.split("\n");
+		console.log(output);
+		output.forEach( element => {
+			if (element != ''){
+				element = element.replace(/(\r\n|\n|\r)/gm, "");	
+			}
+		});
+		worlds = output;
+	}
+	else {
+		worlds = [];
+	}
+	return worlds;
 }
