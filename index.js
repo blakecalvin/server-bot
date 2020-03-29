@@ -85,7 +85,7 @@ client.on("message", msg => {
 						var worldInfo = getCurrentWorld(config.bot.serverPath);
 						var version = worldInfo.version;
 						var current = worldInfo.world;
-						current = world.replace(/(\r\n|\n|\r)/gm, "");
+						current = current.replace(/(\r\n|\n|\r)/gm, "");
 						console.log(`current: ${current}`);
 						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
 						var list = getWorldList(config.bot.serverPath);
@@ -178,7 +178,7 @@ client.on("message", msg => {
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				var version = worldInfo.version;
 				var currentWorld = worldInfo.world;
-				currentWorld = world.replace(/(\r\n|\n|\r)/gm, "");
+				currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
 				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\nOnline : ");
 
