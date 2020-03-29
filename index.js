@@ -77,12 +77,12 @@ client.on("message", msg => {
 			case 'list':
 				switch (content[2]) {
 					case "worlds":
-						var worldInfo = getCurrentWorld(config.bot.server_path);
+						var worldInfo = getCurrentWorld(config.bot.serverPath);
 						var version = worldInfo[0];
 						var current = worldInfo[1];
 						console.log(`current: ${current}`);
 						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
-						var list = getWorldList(config.bot.server_path);
+						var list = getWorldList(config.bot.serverPath);
 						var keys = Object.keys(list);
 						keys.forEach( element => {
 							worlds = worlds + "\n" + list[element];
@@ -103,20 +103,21 @@ client.on("message", msg => {
 
 				break;
 			case 'set':
+				/*
 				switch (content[2]) {
 					case "world":
-						console.log(getCurrentWorld(config.bot.server_path)+" == "+content[3]);
-						console.log(getCurrentWorld(config.bot.server_path) == content[3]);
-						if (getCurrentWorld(config.bot.server_path) == content[3]){
+						console.log(getCurrentWorld(config.bot.serverPath)+" == "+content[3]);
+						console.log(getCurrentWorld(config.bot.serverPath) == content[3]);
+						if (getCurrentWorld(config.bot.serverPath) == content[3]){
 							
 							out = "[Error] current world already set to `" + content[3] + "`" ;
 						}
-						else if (!getWorldList(config.bot.server_path).includes(content[3])){
+						else if (!getWorldList(config.bot.serverPath).includes(content[3])){
 						
 							out = "[Error] `"+content[3]+"` not in `maps` directory.";
 						}
 						else {
-							res = setCurrentWorld(config.bot.server_path, content[3]);
+							res = setCurrentWorld(config.bot.serverPath, content[3]);
 							if (!res){
 								out = "World set to \'" + content[3] + "\'\nStart/restart server to play.";
 							}
@@ -128,11 +129,12 @@ client.on("message", msg => {
 						msg.channel.send(out);
 						break;	
 				}
+				*/
 				break;
 			case 'start':
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				var version = worldInfo[0]; 
-				execSync(`bash ./scripts/start_server.sh ${config.bot.server_path} ${version}`);
+				execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
 				status = gameServerStatus("minecraft");
 				if (status){
 					msg.channel.send(`[Info] Starting server, please wait...`);
@@ -166,7 +168,7 @@ client.on("message", msg => {
 				var ip = config.bot.serverIP;
 				var status = (is_online) ? emoji.online : emoji.offline; 
 
-				var worldInfo = getCurrentWorld(config.bot.server_path);
+				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				var version = worldInfo[0];
 				var currentWorld = worldInfo[1];
 
