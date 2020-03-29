@@ -73,6 +73,7 @@ client.on("message", msg => {
 				var version = worldInfo[0];
 				var world = worldInfo[1];
 				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld:\t"+world+"\nVersion:\t"+version)+"```";
+				msg.channel.send(info);
 				break;
 			case 'list':
 				switch (content[2]) {
