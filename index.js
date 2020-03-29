@@ -70,8 +70,9 @@ client.on("message", msg => {
 				break;
 			case 'info':
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
-				var version = worldInfo[0];
-				var world = worldInfo[1];
+				console.log(worldInfo.toString());
+				var version = worldInfo.version;
+				var world = worldInfo.world;
 				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld:\t"+world+"\nVersion:\t"+version)+"```";
 				msg.channel.send(info);
 				break;
@@ -79,8 +80,8 @@ client.on("message", msg => {
 				switch (content[2]) {
 					case "worlds":
 						var worldInfo = getCurrentWorld(config.bot.serverPath);
-						var version = worldInfo[0];
-						var current = worldInfo[1];
+						var version = worldInfo.version;
+						var current = worldInfo.world;
 						console.log(`current: ${current}`);
 						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
 						var list = getWorldList(config.bot.serverPath);
@@ -134,7 +135,7 @@ client.on("message", msg => {
 				break;
 			case 'start':
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
-				var version = worldInfo[0]; 
+				var version = worldInfo.version; 
 				execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
 				status = gameServerStatus("minecraft");
 				if (status){
@@ -170,8 +171,8 @@ client.on("message", msg => {
 				var status = (is_online) ? emoji.online : emoji.offline; 
 
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
-				var version = worldInfo[0];
-				var currentWorld = worldInfo[1];
+				var version = worldInfo.version;
+				var currentWorld = worldInfo.world;
 
 				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion:"+version+"\nOnline:");
 
