@@ -289,5 +289,5 @@ function  makeBackup(serverPath){
 	var output = getCurrentWorld(serverPath);
 	var version = output.version;
 	var name = output.world;
-	execSync(`cp -r ${serverPath}/maps/${version}/${name} ${serverPath}/backups/${version}/${name}$(date +.%m-%d-%Y_%H:%M)`);
+	execSync(`bash ./scripts/backup.sh ${config.bot.serverPath} ${version} ${name}`);
 }
