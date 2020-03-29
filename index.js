@@ -72,8 +72,11 @@ client.on("message", msg => {
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				console.log(worldInfo.toString());
 				var version = worldInfo.version;
+				console.log(version);
 				var world = worldInfo.world;
-				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld:\t"+world+"\nVersion:\t"+version)+"```";
+				world = world.replace(/(\r\n|\n|\r)/gm, "");
+				console.log(world);
+				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld\t: "+world+"\nVersion\t: "+version)+"```";
 				msg.channel.send(info);
 				break;
 			case 'list':
