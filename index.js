@@ -225,8 +225,8 @@ function gameServerStatus(name){
 }
 
 function getCurrentWorld(serverPath){
-	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \"\n\" a[3]}\'`).toString();
-	current = current.split("\n");
+	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \" \" a[3]}\'`).toString();
+	current = current.split(" ");
 	current.forEach( element => {
 		element = element.replace(/(\r\n|\n|\r)/gm, "");
 	});
