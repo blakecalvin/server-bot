@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 cd $1
-screen -dmS minecraft bash -c 'java -Xmx1G -Xms500M -jar forge-1.12.2.jar nogui'
+screen -dmS minecraft bash -c 'java -Xmx2G -Xms1G -jar forge-$2.jar nogui'

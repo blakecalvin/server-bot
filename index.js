@@ -48,12 +48,14 @@ client.on("message", msg => {
 				*/
 				const cmds = `${BOT}> [command]
 			├─ help    : usage/command list
-			├─ info    : show server info (Name, ID, IPv4)
+			├─ backup  : make backup of currents world.
+			├─ info    : show server info (IPv4, MC world/version)
 			├─ list [target]
+			│         ├─ modpacks: show modpacks used (under maintenance)
 			│         ├─ worlds  : show current and available worlds
-			│         └─ users   : show server members
+			│         └─ users   : show server members (under maintenance)
 			├─ set [target]
-			│         └─ world   : set current world
+			│         └─ world [version] [name]: set current world (under maintenance)
 			├─ start   : start server
 			├─ status  : show server status, IP address, 
 			│ 			     current world and online members
@@ -62,91 +64,36 @@ client.on("message", msg => {
 
 				msg.channel.send(help, options);
 				break;
+			case 'backup':
+				makeBackup(config.bot.serverPath);
+				msg.channel.send(`[Info] Made backup of current world.`);
+				break;
 			case 'info':
-				/*
-				INFO:
-				Name	: server
-				ID		: a23j2323j
-				IPv4	: 10.192.168.0
-				*/
-				exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member/${config.bot.server_id}`, (err, stdout, stderr) => {
-					var info = null;
-					if (stdout){
-						output = JSON.parse(stdout);
-						if (output){
-							info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("Name\t: "+output['name']+"\nID\t  : "+output['networkId']+"\nIPv4\t: "+output['config']['ipAssignments'][0])+"```";
-						}
-						else {
-							info = '[Error] Request failed.';
-						}
-					}
-					else if (stderr){
-						info = stderr;
-					}
-					else if (err){
-						console.log(err);
-					}
-					msg.channel.send(info);
-				});
+				var worldInfo = getCurrentWorld(config.bot.serverPath);
+				var version = worldInfo[0];
+				var world = worldInfo[1];
+				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld:\t"+world+"\nVersion:\t"+version)+"```";
 				break;
 			case 'list':
 				switch (content[2]) {
 					case "worlds":
-						current = getCurrentWorld(config.bot.server_path);
-						current = current.replace(/(\r\n|\n|\r)/gm, "");
+						var worldInfo = getCurrentWorld(config.bot.server_path);
+						var version = worldInfo[0];
+						var current = worldInfo[1];
 						console.log(`current: ${current}`);
-						var worlds = `**Current World:**\n - ${current}\n**All Worlds:**`;
-						exec(`ls ${config.bot.server_path}/maps/`, (err, stdout, stderr) => {
-							if (stdout) {
-								output = stdout;
-								
-								if (output){
-									output = output.split("\n");
-									console.log(output);
-									output.forEach( element => {
-										if (element != ''){
-											element = element.replace(/(\r\n|\n|\r)/gm, "");
-											worlds = worlds + "\n - " + element;	
-										}
-									});
-								}
-								else {
-									worlds = `${worlds}
-									[Error] failed to fetch worlds.`;
-								}
-							}
-							else if (stderr) worlds = stderr;
-							else if (err) console.log(err);
-							msg.channel.send(worlds);
-						});
+						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
+						var list = getWorldList(config.bot.server_path);
+						var keys = Object.keys(list);
+						keys.forEach( element => {
+							worlds = worlds + "\n" + list[element];
+							list[element].forEach( element2 => {
+								worlds = worlds + "\n\t-" + element2;
+							})
+						})
+						msg.channel.send(worlds);
 						break;
 					case "users":
-						exec(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member`, (err, stdout, stderr) => {
-							var users = "**Users:**";
-							if (stdout){
-								output = JSON.parse(stdout);
-								if (output){
-									users = users + "```";
-									output.forEach(element => {
-										var status = emoji.online;
-										if (element.online){
-											status = emoji.online;
-										}
-										else {
-											status = emoji.offline;
-										}
-										users = users + "\n " + status + " : " + element['name'] + " : " + element['config']['ipAssignments'][0];
-									});
-									users = users + "\n```";
-								}
-								else {
-									users = users+"\n[Error] failed to fetch users.";
-								}
-							}
-							else if (stderr) users = stderr;
-							else if (err) console.log(err);
-							msg.channel.send(users);
-						});
+						msg.channel.send(`!! UNDER MAINTENANCE !!`);
 						break;
 					default:
 						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
@@ -183,11 +130,19 @@ client.on("message", msg => {
 				}
 				break;
 			case 'start':
-				exec(`bash ./scripts/start_server.sh ${config.bot.server_path}`, (err, stdout, stderr)  => {
-					if (err) console.error(err);
-					if (stdout) msg.channel.send("Starting server...");
-					else if (stderr) msg.channel.send(stderr);
-				});
+				var worldInfo = getCurrentWorld(config.bot.serverPath);
+				var version = worldInfo[0]; 
+				execSync(`bash ./scripts/start_server.sh ${config.bot.server_path} ${version}`);
+				status = gameServerStatus("minecraft");
+				if (status){
+					msg.channel.send(`[Info] Starting server, please wait...`);
+					setTimeout(function(){
+						msg.channel.send(`[Success] Server started.`);
+					}, 3000);
+				}
+				else{
+					msg.channel.send(`[Error] encountered error starting server.`);
+				}
 				break;
 			case 'status':
 				/*
@@ -198,8 +153,8 @@ client.on("message", msg => {
 				server : 🟢
 				IPv4 : 10.192.168.0
 				world : map1
-				online-users : 3
-				total-users : 6                TODO: IP Geolocating 
+				version : 1.12.2
+								               TODO: IP Geolocating 
 														|
 				online:									V
 					> user1 	: 10.192.168.1 	: (Seattle, WA, USA)
@@ -208,34 +163,17 @@ client.on("message", msg => {
 				*/
 
 				var is_online = gameServerStatus("minecraft");
-				var ip = '';
+				var ip = config.bot.serverIP;
 				var status = (is_online) ? emoji.online : emoji.offline; 
 
-				output = getServerInfo(config);
-				if (output){
-					ip = output['config']['ipAssignments'][0];
-				}
-				else {
-					ip = '[Error] failed to fetch IP.'
-				}
+				var worldInfo = getCurrentWorld(config.bot.server_path);
+				var version = worldInfo[0];
+				var currentWorld = worldInfo[1];
 
-				var currentWorld = getCurrentWorld(config.bot.server_path);
+				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion:"+version+"\nOnline:");
 
-				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nOnline:");
-
-				output = getMembers(config);
-				if (output){
-					output.forEach((element) => {
-						if (element['name'] != config.bot.sever_name && element['online'] == true) {
-							out = out + "\n - "+element['name']+" : "+element['config']['ipAssignments'][0];
-						}
-					});
-					out = out + "```";
-				}
-				else {
-					out = `${out}
-					[Error] failed to fetch members.`
-				}
+				// output = getMembers(config);
+				out = out + "```";
 
 				msg.channel.send(out);
 				break;
@@ -258,15 +196,10 @@ client.on("ready", () => console.log(`Logged in as ${client.user.tag}`));
 
 client.login(client.config.token);
 
-function getServerInfo(config){
-	var info = execSync(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member/${config.bot.server_id}`).toString();
-	info = JSON.parse(info);
-	return info
-}
-
+// Todo: update to use forge to output active players using "list" command
 function getMembers(config){
-	var members = execSync(`curl -H \"Authorization: bearer ${config.bot.zero_tier_token}\" https://my.zerotier.com/api/network/${config.bot.network_id}/member`).toString();
-	members = JSON.parse(members);
+	var members = execSync(`screen -S sessionName -p 0 -X stuff \"list^M\"`).toString();
+	console.log(members);
 	return members;
 }
 
@@ -290,11 +223,18 @@ function gameServerStatus(name){
 }
 
 function getCurrentWorld(serverPath){
-	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2]}\'`).toString();
-	current = current.replace(/(\r\n|\n|\r)/gm, "");
-	return current;
+	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \"\n\" a[3]}\'`).toString();
+	current = current.split("\n");
+	current.forEach( element => {
+		element = element.replace(/(\r\n|\n|\r)/gm, "");
+	});
+	return {
+		version: current[0],
+		world: current[1]
+	};
 }
 
+// Todo: update
 function setCurrentWorld(serverPath, name){
 	var set = execSync(`sed "s|level-name=maps/.*|level-name=maps/${name}|g" ${serverPath}/server.properties`).toString();
 	return set;
@@ -302,6 +242,7 @@ function setCurrentWorld(serverPath, name){
 
 function getWorldList(serverPath){
 	var output = execSync(`ls ${serverPath}/maps/`).toString();
+	var versions = null;
 	var worlds = null;
 	if (output){
 		output = output.split("\n");
@@ -311,10 +252,32 @@ function getWorldList(serverPath){
 				element = element.replace(/(\r\n|\n|\r)/gm, "");	
 			}
 		});
-		worlds = output;
+		versions = output;
+		worlds = {};
+		versions.forEach( element => {
+			worlds[element] = [];
+			output = execSync(`ls ${serverPath}/maps/${element}`).toString();
+			if (output){
+				output = output.split("\n");
+				console.log(output);
+				output.forEach( element2 => {
+					if (element2 != ''){
+						element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
+					}
+				});
+				worlds[element] = output;
+			}
+		})
 	}
 	else {
-		worlds = [];
+		versions = [];
 	}
 	return worlds;
+}
+
+function  makeBackup(serverPath){
+	var output = getCurrentWorld(serverPath);
+	var version = output.version;
+	var name = output.world;
+	execSync(`cp -r ${serverPath}/maps/${version}/${name} ${serverPath}/backups/${version}/${name}$(date +.%m-%d-%Y_%H:%M)`);
 }

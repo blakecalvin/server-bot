@@ -1,0 +1,1 @@
+Put .zip modpacks in this directory.
