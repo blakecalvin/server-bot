@@ -76,7 +76,7 @@ client.on("message", msg => {
 				var world = worldInfo.world;
 				world = world.replace(/(\r\n|\n|\r)/gm, "");
 				console.log(world);
-				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4\t: "+config.bot.serverIP+"\nWorld\t: "+world+"\nVersion\t: "+version)+"```";
+				var info = "**Server Info:**\n"+"```"+Discord.escapeMarkdown("IPv4 : "+config.bot.serverIP+"\nWorld : "+world+"\nVersion : "+version)+"```";
 				msg.channel.send(info);
 				break;
 			case 'list':
@@ -85,9 +85,11 @@ client.on("message", msg => {
 						var worldInfo = getCurrentWorld(config.bot.serverPath);
 						var version = worldInfo.version;
 						var current = worldInfo.world;
+						current = world.replace(/(\r\n|\n|\r)/gm, "");
 						console.log(`current: ${current}`);
 						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
 						var list = getWorldList(config.bot.serverPath);
+						console.log(Object.keys(list))
 						var keys = Object.keys(list);
 						keys.forEach( element => {
 							worlds = worlds + "\n" + list[element];
@@ -176,8 +178,9 @@ client.on("message", msg => {
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				var version = worldInfo.version;
 				var currentWorld = worldInfo.world;
+				currentWorld = world.replace(/(\r\n|\n|\r)/gm, "");
 
-				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion:"+version+"\nOnline:");
+				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\nOnline : ");
 
 				// output = getMembers(config);
 				out = out + "```";
