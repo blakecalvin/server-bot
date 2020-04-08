@@ -100,6 +100,7 @@ client.on("message", msg => {
 								worlds = worlds + "\n    -" + element2;
 							})
 						})
+						world_msg = world_msg +  worlds + "```";
 						msg.channel.send(worlds);
 						break;
 					case "users":
@@ -233,9 +234,9 @@ client.on("ready", () => console.log(`Logged in as ${client.user.tag}`));
 client.login(client.config.token);
 
 // Todo: update to use forge to output active players using "list" command
-function getMembers(config){
-	execSync(`screen -S sessionName -p 0 -X stuff \"list^M\"`);
-	var members = execSync(`tail -n 1 /opt/server/logs/latest.log`).toString();
+function getMembers(serverPath){
+	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
+	var members = execSync(`tail -n 1 ${serverPath}logs/latest.log`).toString();
 	members = members.split(':');
 	members = members[2];
 	members = members.split(',');
@@ -287,6 +288,7 @@ function getWorldList(serverPath){
 	var worlds = null;
 	if (output){
 		output = output.split("\n");
+		output = output.slice(output.length-1,1);
 		console.log(output);
 		output.forEach( element => {
 			if (element != ''){
@@ -300,6 +302,7 @@ function getWorldList(serverPath){
 			output = execSync(`ls ${serverPath}/maps/${element}`).toString();
 			if (output){
 				output = output.split("\n");
+				output = output.slice(output.length-1,1);
 				console.log(output);
 				output.forEach( element2 => {
 					if (element2 != ''){
