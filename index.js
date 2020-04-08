@@ -107,9 +107,14 @@ client.on("message", msg => {
 						var members = getMembers(config.bot.serverPath);
 						var list_msg = "**Users:**\n```";
 						var member_msg = "";
-						members.forEach( element => {
-							member_msg = member_msg + "\n  " + emoji.online + " : " + element;
-						});
+						if (members != null){
+							members.forEach( element => {
+								member_msg = member_msg + "\n  " + emoji.online + " : " + element;
+							});
+						}
+						else {
+							member_msg = "None. You's alone ☹️"
+						}
 						list_msg = list_msg + Discord.escapeMarkdown(member_msg) + "```";
 						msg.channel.send(list_msg);
 						break;
@@ -198,7 +203,7 @@ client.on("message", msg => {
 
 				out = "**Status:**\n```"+ Discord.escapeMarkdown("Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\nOnline : ");
 
-				// output = getMembers(config);
+				//output = getMembers(config.bot.serverPath);
 				out = out + "```";
 
 				msg.channel.send(out);
@@ -239,9 +244,14 @@ function getMembers(serverPath){
 	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 	members = members.split(':');
 	members = members[2];
-	members = members.split(',');
-	members = members.replace(/(\r\n|\n|\r)/gm, "");
-	console.log(members);
+	if (members.length > 0){
+		members = members.split(',');
+		members = members.replace(/(\r\n|\n|\r)/gm, "");
+		console.log(members);
+	}
+	else{
+		members = null;
+	}
 	return members;
 }
 
