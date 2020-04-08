@@ -242,8 +242,8 @@ client.login(client.config.token);
 function getMembers(serverPath){
 	setTimeout(function(){
 		execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
-	}, 200);
-	var members = execSync(`tail -n 5 ${serverPath}/logs/latest.log | grep players`).toString();
+	}, 50);
+	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 	members = members.split(':');
 	members = members[4];
 	if (members.length > 1){
