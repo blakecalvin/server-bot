@@ -236,7 +236,7 @@ client.login(client.config.token);
 // Todo: update to use forge to output active players using "list" command
 function getMembers(serverPath){
 	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
-	var members = execSync(`tail -n 1 ${serverPath}logs/latest.log`).toString();
+	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 	members = members.split(':');
 	members = members[2];
 	members = members.split(',');
