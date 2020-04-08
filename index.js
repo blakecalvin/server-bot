@@ -104,7 +104,7 @@ client.on("message", msg => {
 						msg.channel.send(worlds);
 						break;
 					case "users":
-						var members = getMembers(config);
+						var members = getMembers(config.bot.serverPath);
 						var list_msg = "**Users:**\n```";
 						var member_msg = "";
 						members.forEach( element => {
