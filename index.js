@@ -48,12 +48,12 @@ client.on("message", msg => {
 				*/
 				const cmds = `${BOT}> [command]
 			├─ help    : usage/command list
-			├─ backup  : make backup of currents world.
+			├─ backup  : make backup of current world.
 			├─ info    : show server info (IPv4, MC world/version)
 			├─ list [target]
-			│         ├─ modpacks: show modpacks used (under maintenance)
+			│         ├─ modpacks: show modpack for each version
 			│         ├─ worlds  : show current and available worlds
-			│         └─ users   : show server members (under maintenance)
+			│         └─ users   : show server members
 			├─ set [target]
 			│         └─ world [version] [name]: set current world (under maintenance)
 			├─ start   : start server
@@ -81,26 +81,36 @@ client.on("message", msg => {
 				break;
 			case 'list':
 				switch (content[2]) {
+					case "modpacks":
+						msg.channel.send("**Modpacks:**\n```" + Discord.escapeMarkdown(listModpacks(config.bot.serverPath)) + "```");
 					case "worlds":
 						var worldInfo = getCurrentWorld(config.bot.serverPath);
 						var version = worldInfo.version;
 						var current = worldInfo.world;
 						current = current.replace(/(\r\n|\n|\r)/gm, "");
 						console.log(`current: ${current}`);
-						var worlds = `**Current World:** ${current}\n**Version:** ${version}\n\n**All Worlds:**`;
+						var world_msg = "**Worlds:**\n```";
+						var worlds = "Current World: " + current + "\nVersion: " + version + "\n\nAll Worlds:";
 						var list = getWorldList(config.bot.serverPath);
 						console.log(Object.keys(list))
 						var keys = Object.keys(list);
 						keys.forEach( element => {
 							worlds = worlds + "\n" + list[element];
 							list[element].forEach( element2 => {
-								worlds = worlds + "\n\t-" + element2;
+								worlds = worlds + "\n    -" + element2;
 							})
 						})
 						msg.channel.send(worlds);
 						break;
 					case "users":
-						msg.channel.send(`!! UNDER MAINTENANCE !!`);
+						var members = getMembers(config);
+						var list_msg = "**Users:**\n```";
+						var member_msg = "";
+						members.forEach( element => {
+							member_msg = member_msg + "\n  " + emoji.online + " : " + element;
+						});
+						list_msg = list_msg + Discord.escapeMarkdown(member_msg) + "```";
+						msg.channel.send(list_msg);
 						break;
 					default:
 						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
@@ -139,6 +149,11 @@ client.on("message", msg => {
 				*/
 				break;
 			case 'start':
+				status = gameServerStatus("minecraft");
+				if (status){
+					msg.channel.send(`[Error] Server already running.`);
+					break;
+				}
 				var worldInfo = getCurrentWorld(config.bot.serverPath);
 				var version = worldInfo.version; 
 				execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
@@ -188,11 +203,22 @@ client.on("message", msg => {
 				msg.channel.send(out);
 				break;
 			case 'stop':
-				exec(`bash ./scripts/stop_server.sh`, (err, stdout, stderr)  => {
-					if (err) console.error(err);
-					if (stdout) msg.channel.send("Stopping server...");
-					else if (stderr) msg.channel.send(stderr);
-				});
+				status = gameServerStatus("minecraft");
+				if (status){
+					msg.channel.send(`[Error] No server running.`);
+					break;
+				}
+				execSync(`bash ./scripts/stop_server.sh`);
+				setTimeout(function(){
+					msg.channel.send(`[Info] Stopping server, please wait...`);
+				}, 3000);
+				status = gameServerStatus("minecraft");
+				if (status){
+					msg.channel.send(`[Error] encountered error stopping server.`)
+				}
+				else{
+					msg.channel.send(`[Success] Server stopped.`);
+				}
 				break;
 			default:
 				out = "[Error] command `"+content[1]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
@@ -208,7 +234,12 @@ client.login(client.config.token);
 
 // Todo: update to use forge to output active players using "list" command
 function getMembers(config){
-	var members = execSync(`screen -S sessionName -p 0 -X stuff \"list^M\"`).toString();
+	execSync(`screen -S sessionName -p 0 -X stuff \"list^M\"`);
+	var members = execSync(`tail -n 1 /opt/server/logs/latest.log`).toString();
+	members = members.split(':');
+	members = members[2];
+	members = members.split(',');
+	members = members.replace(/(\r\n|\n|\r)/gm, "");
 	console.log(members);
 	return members;
 }
@@ -290,4 +321,12 @@ function  makeBackup(serverPath){
 	var version = output.version;
 	var name = output.world;
 	execSync(`bash ./scripts/backup.sh ${config.bot.serverPath} ${version} ${name}`);
+}
+
+function listModpacks(serverPath){
+	var output = execSync(`tree -CL 2 --noreport /opt/server-bot/modpacks/`).toString();
+	output = output.split('\n');
+	output = output.splice(0,1);
+	output = output.join('\n');
+	return output;
 }
