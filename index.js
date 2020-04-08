@@ -240,10 +240,12 @@ client.login(client.config.token);
 
 // Todo: update to use forge to output active players using "list" command
 function getMembers(serverPath){
-	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
-	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
+	setTimeout(function(){
+		execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
+	}, 200);
+	var members = execSync(`tail -n 5 ${serverPath}/logs/latest.log | grep members`).toString();
 	members = members.split(':');
-	members = members[2];
+	members = members[4];
 	if (members.length > 1){
 		members = members.split(',');
 		console.log(members);
