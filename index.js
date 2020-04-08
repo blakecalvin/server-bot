@@ -55,7 +55,7 @@ client.on("message", msg => {
 			│         ├─ worlds  : show current and available worlds
 			│         └─ users   : show server members
 			├─ set [target]
-			│         └─ world [version] [name]: set current world (under maintenance)
+			│         └─ world [name]: set current world (under maintenance)
 			├─ start   : start server
 			├─ status  : show server status, IP address, 
 			│ 			     current world and online members
@@ -82,7 +82,7 @@ client.on("message", msg => {
 			case 'list':
 				switch (content[2]) {
 					case "modpacks":
-						msg.channel.send("**Modpacks:**\n```" + Discord.escapeMarkdown(listModpacks(config.bot.serverPath)) + "```");
+						msg.channel.send("**Modpacks:**\n```" + Discord.escapeMarkdown(listModpacks(config.bot.serverPath)) + "```\nDownlaod Here:\nhttps://drive.google.com/open?id=1QlmfzqNZbYYnWC6WzYPki7061Ce8Jc9M");
 					case "worlds":
 						var worldInfo = getCurrentWorld(config.bot.serverPath);
 						var version = worldInfo.version;
@@ -324,9 +324,6 @@ function  makeBackup(serverPath){
 }
 
 function listModpacks(serverPath){
-	var output = execSync(`tree -CL 2 --noreport /opt/server-bot/modpacks/`).toString();
-	output = output.split('\n');
-	output = output.splice(0,1);
-	output = output.join('\n');
+	var output = execSync(`cat ./modpacks.txt`).toString();
 	return output;
 }
