@@ -288,7 +288,7 @@ function getWorldList(serverPath){
 	var worlds = null;
 	if (output){
 		output = output.split("\n");
-		output = output.slice(output.length-1,1);
+		output = output.splice(output.length-1,1);
 		console.log(output);
 		output.forEach( element => {
 			if (element != ''){
@@ -302,7 +302,7 @@ function getWorldList(serverPath){
 			output = execSync(`ls ${serverPath}/maps/${element}`).toString();
 			if (output){
 				output = output.split("\n");
-				output = output.slice(output.length-1,1);
+				output = output.splice(output.length-1,1);
 				console.log(output);
 				output.forEach( element2 => {
 					if (element2 != ''){
