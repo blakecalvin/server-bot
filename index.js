@@ -244,9 +244,8 @@ function getMembers(serverPath){
 	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 	members = members.split(':');
 	members = members[2];
-	if (members.length > 0){
+	if (members.length > 1){
 		members = members.split(',');
-		members = members.replace(/(\r\n|\n|\r)/gm, "");
 		console.log(members);
 	}
 	else{
