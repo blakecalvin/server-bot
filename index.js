@@ -377,8 +377,9 @@ function setWorld(serverPath, name){
 	var list = getWorldList(serverPath);
 	var version = getVersion(list, name);
 	console.log("version: "+version);
-	var output = execSync(`sed "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${serverPath}/server.properties`).toString();
-	console.log(output);
+	console.log("before: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
+	execSync(`sed "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${serverPath}/server.properties`);
+	console.log("after: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
 }
 
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
