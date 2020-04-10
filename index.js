@@ -43,13 +43,13 @@ client.on("message", msg => {
 				var valid = true;
 				switch (content[2]) {
 					case "mods":
-						out = "**Mods**/n```";
+						out = "**Mods**\n```";
 						break;
 					case "worlds":
-						out = "**Worlds**/n```";
+						out = "**Worlds**\n```";
 						break;
 					case "users":
-						out = "**Users**/n```";
+						out = "**Users**\n```";
 						break;
 					default:
 						valid = false;
@@ -68,7 +68,7 @@ client.on("message", msg => {
 							out = set(config, content[2], content[3]);
 						}
 						else{
-							out = "[Error] \'"+content[1]+" "+content[2]+"\' requires name.\nUse `"+BOT+"> help` for usage.";
+							out = "[Error] `"+content[1]+" "+content[2]+"` requires name.\nUse `"+BOT+"> help` for usage.";
 						}
 						break;
 					default:
@@ -77,9 +77,9 @@ client.on("message", msg => {
 				}
 				break;
 			case 'start':
-				var status = start(config, msg);
+				var serverStatus = start(config, msg);
 
-				if (status){
+				if (serverStatus){
 					out = `[Success] Server started.`;
 				}
 				else{
@@ -91,9 +91,9 @@ client.on("message", msg => {
 				break;
 			case 'stop':
 
-				var status = stop(msg);
+				var serverStatus = stop(msg);
 
-				if (status){
+				if (serverStatus){
 					out = `[Error] encountered error stopping server.`;
 				}
 				else{
@@ -246,7 +246,7 @@ function start(config, msg){
 function status(config){
 
 	var is_online = getServerStatus("minecraft");
-	var status = (is_online) ? emoji.online : emoji.offline;
+	var serverStatus = (is_online) ? emoji.online : emoji.offline;
 
 	var ip = config.bot.serverIP;
 	 
@@ -255,7 +255,7 @@ function status(config){
 	var currentWorld = worldInfo.world;
 	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
-	out = "Server : "+status+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :"+list("users", config);
+	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :"+list("users", config);
 	return out;
 }
 
