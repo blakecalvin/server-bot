@@ -163,7 +163,7 @@ function info(config){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version;
 	var world = worldInfo.world;
-	world = world.replace(/(\r\n|\n|\r)/gm, "");
+	world = removeWhitespace(world);
 	var info = "IPv4 : "+config.bot.serverIP+"\nWorld : "+world+"\nVersion : "+version;
 	return info;
 }
@@ -178,7 +178,7 @@ function list(config, target){
 			var worldInfo = getCurrentWorld(config.bot.serverPath);
 			var version = worldInfo.version;
 			var current = worldInfo.world;
-			current = current.replace(/(\r\n|\n|\r)/gm, "");
+			current = removeWhitespace(current);
 		
 			out = "Current World : " + current + "\nVersion : " + version + "\n\n- All Worlds : -------";
 
@@ -269,7 +269,7 @@ function status(config){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version;
 	var currentWorld = worldInfo.world;
-	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
+	currentWorld = removeWhitespace(currentWorld);
 
 	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version;
 	if (is_online){
@@ -290,7 +290,7 @@ function getCurrentWorld(serverPath){
 	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \" \" a[3]}\'`).toString();
 	current = current.split(" ");
 	current.forEach( element => {
-		element = element.replace(/(\r\n|\n|\r)/gm, "");
+		element = removeWhitespace(element);
 	});
 	console.log(current[0]);
 	console.log(current[1]);
@@ -352,7 +352,7 @@ function getWorldList(serverPath){
 
 		output.forEach( element => {
 			if (element != ''){
-				element = element.replace(/(\r\n|\n|\r)/gm, "");	
+				element = removeWhitespace(element);	
 			}
 		});
 
@@ -371,7 +371,7 @@ function getWorldList(serverPath){
 
 					output.forEach( element2 => {
 						if (element2 != ' '){
-							element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
+							element2 = removeWhitespace(element2);	
 							worlds[element2] = {
 								name : element2,
 								version : element
@@ -430,3 +430,7 @@ String.prototype.padding = function(n, c)
         var pad = Array(m + 1).join(String(c || ' ').charAt(0));
         return (n < 0) ? pad + val : val + pad;
 };
+
+function removeWhitespace(string){
+	return string.replace(/((\r\n)+|\r+|\n+|\t+|\s+)/gm, "");
+}
