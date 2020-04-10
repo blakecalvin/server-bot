@@ -7,6 +7,7 @@
     "bot": {
         "botName": "Name of Bot",
         "serverIP": "IPv4",
-        "serverPath": "path/to/server"
+        "serverPath": "path/to/server",
+        "modsURL": "URL for mods"
     }
 }
