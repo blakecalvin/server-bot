@@ -77,33 +77,51 @@ client.on("message", msg => {
 				}
 				break;
 			case 'start':
-				var serverStatus = start(config, msg);
+				var serverStatus = getServerStatus("minecraft");
 				if (serverStatus){
-					out = `[Success] Server started.`;
+					out = `[Error] Server already running.`;
 				}
-				else if (serverStatus != null){
-					out = `[Error] encountered error starting server.`;
+				else {
+					start(config, msg);		
+					setTimeout(() => { 
+						serverStatus = getServerStatus("minecraft");
+						if (serverStatus){
+							out = `[Success] Server started.`;
+						}
+						else {
+							out = `[Error] encountered error starting server.`;
+						}
+					}, 500);
 				}
 				break;
 			case 'status':
 				out = "**Status**\n```" + Discord.escapeMarkdown(status(config), true) + "```";
 				break;
 			case 'stop':
-
-				var serverStatus = stop(msg);
-
-				if (serverStatus){
-					out = `[Error] encountered error stopping server.`;
+				var serverStatus = getServerStatus("minecraft");
+				if (!serverStatus){
+					out = `[Error] No server running.`;
 				}
-				else if (serverStatus != null){
-					out = `[Success] Server stopped.`;
+				else {
+					stop(msg);
+					setTimeout(() => { 
+						serverStatus = getServerStatus("minecraft");
+						if (serverStatus){
+							out = `[Error] encountered error stopping server.`;
+						}
+						else if (serverStatus != null){
+							out = `[Success] Server stopped.`;
+						}
+					}, 500);
 				}
 				break;
 			default:
 				out = "[Error] command `"+content[1]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
 				break;
 		}
-		msg.channel.send(out);
+		setTimeout(() => {
+			msg.channel.send(out);
+		}, 1000);
 	}
 });
 
@@ -220,17 +238,10 @@ function set(config, target, name){
 }
 
 function start(config, msg){
-	var status = getServerStatus("minecraft");
-	if (status){
-		msg.channel.send(`[Error] Server already running.`);
-		return null;
-	}
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
 	execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
 	msg.channel.send(`[Info] Starting server, please wait...`);
-	status = getServerStatus("minecraft");
-	return status;
 }
 
 function status(config){
@@ -250,15 +261,8 @@ function status(config){
 }
 
 function stop(msg){
-	var status = getServerStatus("minecraft");
-	if (!status){
-		msg.channel.send(`[Error] No server running.`);
-		return null;
-	}
 	execSync(`bash ./scripts/stop_server.sh`);
 	msg.channel.send(`[Info] Stopping server, please wait...`);
-	status = getServerStatus("minecraft");
-	return status;
 }
 
 // -----------------[ GETTERS ]----------------------------------------------------------------------------------------------------
@@ -372,7 +376,8 @@ function getVersion(list, name){
 function setWorld(serverPath, name){
 	var list = getWorldList(serverPath);
 	var version = getVersion(list, name);
-	execSync(`sed "s|level-name=maps/.*|level-name=maps/${version}/${name}|g" ${serverPath}/server.properties`);
+	console.log("version: "+version);
+	execSync(`sed "s/level-name=maps\/.*/level-name=maps\/${version}\/${name}/g" ${serverPath}/server.properties`);
 }
 
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
@@ -392,7 +397,5 @@ String.prototype.padding = function(n, c)
         }
         var m = Math.max((Math.abs(n) - this.length) || 0, 0);
         var pad = Array(m + 1).join(String(c || ' ').charAt(0));
-//      var pad = String(c || ' ').charAt(0).repeat(Math.abs(n) - this.length);
         return (n < 0) ? pad + val : val + pad;
-//      return (n < 0) ? val + pad : pad + val;
 };
