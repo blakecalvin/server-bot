@@ -160,16 +160,18 @@ function list(config, target){
 			var current = worldInfo.world;
 			current = current.replace(/(\r\n|\n|\r)/gm, "");
 		
-			out = "Current World: " + current + "\nVersion: " + version + "\n\nAll Worlds:\n\nName:\t\tVersion:";
+			out = "Current World : " + current + "\nVersion : " + version + "\n\n---[ All Worlds : ]-----";
 
 			var list = getWorldList(config.bot.serverPath);
 			console.log("list: " + JSON.stringify(list, null, 4));
 			console.log("keys: " + Object.keys(list).toString());
 
+			var header = "\nName:".padding(15) + "Version:";
+			out = out + header;
 			var keys = Object.keys(list);
 			keys.forEach( element => {
-				if (element != " " && list[element]){
-					out = out + "\n" + list[element].name + "\t\t" + list[element].version; 
+				if (element != " " && list[element]){ 
+					out = out + "\n" + list[element].name.padding(15) + list[element].version; 
 				}
 			});
 			break;
@@ -226,7 +228,6 @@ function start(config, msg){
 	var status = getServerStatus("minecraft");
 	if (status){
 		msg.channel.send(`[Error] Server already running.`);
-		break;
 	}
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
@@ -252,15 +253,14 @@ function status(config){
 	var currentWorld = worldInfo.world;
 	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
-	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :"+list(config, "users");
+	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :\n"+list(config, "users");
 	return out;
 }
 
 function stop(msg){
 	var status = getServerStatus("minecraft");
-	if (status){
+	if (!status){
 		msg.channel.send(`[Error] No server running.`);
-		break;
 	}
 	execSync(`bash ./scripts/stop_server.sh`);
 
@@ -397,3 +397,16 @@ function checkWorldList(list, name){
 	});
 	return false;
 }
+
+String.prototype.padding = function(n, c)
+{
+        var val = this.valueOf();
+        if ( Math.abs(n) <= val.length ) {
+                return val;
+        }
+        var m = Math.max((Math.abs(n) - this.length) || 0, 0);
+        var pad = Array(m + 1).join(String(c || ' ').charAt(0));
+//      var pad = String(c || ' ').charAt(0).repeat(Math.abs(n) - this.length);
+        return (n < 0) ? pad + val : val + pad;
+//      return (n < 0) ? val + pad : pad + val;
+};
