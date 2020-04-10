@@ -378,12 +378,9 @@ function setWorld(serverPath, name){
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
 
 function checkWorldList(list, name){
-	var keys = Object.keys(list);
-	keys.forEach( element => {
-		if (element == name){
-			return true;
-		}
-	});
+	if (list[name] != null){
+		return true;
+	}
 	return false;
 }
 
