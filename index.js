@@ -78,11 +78,10 @@ client.on("message", msg => {
 				break;
 			case 'start':
 				var serverStatus = start(config, msg);
-
 				if (serverStatus){
 					out = `[Success] Server started.`;
 				}
-				else{
+				else if (serverStatus != null){
 					out = `[Error] encountered error starting server.`;
 				}
 				break;
@@ -96,7 +95,7 @@ client.on("message", msg => {
 				if (serverStatus){
 					out = `[Error] encountered error stopping server.`;
 				}
-				else{
+				else if (serverStatus != null){
 					out = `[Success] Server stopped.`;
 				}
 				break;
@@ -160,14 +159,13 @@ function list(config, target){
 			var current = worldInfo.world;
 			current = current.replace(/(\r\n|\n|\r)/gm, "");
 		
-			out = "Current World : " + current + "\nVersion : " + version + "\n\n---[ All Worlds : ]-----";
+			out = "Current World : " + current + "\nVersion : " + version + "\n\n- All Worlds : -------";
 
 			var list = getWorldList(config.bot.serverPath);
-			console.log("list: " + JSON.stringify(list, null, 4));
-			console.log("keys: " + Object.keys(list).toString());
 
 			var header = "\nName:".padding(15) + "Version:";
 			out = out + header;
+			
 			var keys = Object.keys(list);
 			keys.forEach( element => {
 				if (element != " " && list[element]){ 
@@ -204,9 +202,6 @@ function set(config, target, name){
 
 			var worlds = getWorldList(config.bot.serverPath);
 
-			console.log(current+" == "+content[3]);
-			console.log(current == content[3]);
-
 			if (current == content[3]){
 				out = "[Error] current world already set to `" + content[3] + "`." ;
 			}
@@ -228,6 +223,7 @@ function start(config, msg){
 	var status = getServerStatus("minecraft");
 	if (status){
 		msg.channel.send(`[Error] Server already running.`);
+		return null;
 	}
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
@@ -261,6 +257,7 @@ function stop(msg){
 	var status = getServerStatus("minecraft");
 	if (!status){
 		msg.channel.send(`[Error] No server running.`);
+		return null;
 	}
 	execSync(`bash ./scripts/stop_server.sh`);
 
@@ -299,7 +296,6 @@ function getMembers(serverPath){
 		members = members[4];
 		if (members.length > 3){
 			members = members.split(',');
-			console.log(members);
 		}
 		else {
 			members = null;
@@ -333,30 +329,33 @@ function getServerStatus(name){
 
 function getWorldList(serverPath){
 	var output = execSync(`ls ${serverPath}/maps`).toString();
-	console.log("versions:\n"+output);
 	var versions = null;
 	var worlds = null;
+
 	if (output){
+
 		output = output.split("\n");
-		console.log("after split: " + output);
 		output.pop();
-		console.log("after pop: "+ output);
+
 		output.forEach( element => {
 			if (element != ''){
 				element = element.replace(/(\r\n|\n|\r)/gm, "");	
 			}
 		});
+
 		versions = output;
-		console.log("versions: "+versions);
 		worlds = {};
+
 		versions.forEach( element => {
 			if (element != ' '){
+
 				output = execSync(`ls ${serverPath}/maps/${element}`).toString();
+
 				if (output){
+
 					output = output.split("\n");
-					console.log("after split: " + output);
 					output.pop();
-					console.log("after pop: "+ output);
+
 					output.forEach( element2 => {
 						if (element2 != ' '){
 							element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
