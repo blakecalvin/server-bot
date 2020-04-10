@@ -135,7 +135,8 @@ function  backup(serverPath){
 	var output = getCurrentWorld(serverPath);
 	var version = output.version;
 	var name = output.world;
-	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}$(date +.%m-%d-%Y_%H:%M).tar.gz ${serverPath}/maps/${version}/${name}`);
+	var date = getDate();
+	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}_${date}.tar.gz ${serverPath}/maps/${version}/${name}`);
 }
 
 function help(){
@@ -383,6 +384,16 @@ function getWorldList(serverPath){
 
 function getVersion(list, name){
 	return list[name].version;
+}
+
+function getDate(){
+	let date_ob = new Date();
+	let date = ("0" + date_ob.getDate()).slice(-2);
+	let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+	let year = date_ob.getFullYear();
+	let hours = date_ob.getHours();
+	let minutes = date_ob.getMinutes();
+	return month + "-" + date + "-" + year + "_" + hours + ":" + minutes;
 }
 
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
