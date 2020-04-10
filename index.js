@@ -192,6 +192,12 @@ function list(config, target){
 			});
 			break;
 		case "users":
+
+			var is_online = getServerStatus("minecraft");
+			if (is_online){
+				return "[Error] No server running.";
+			}	
+
 			var members = getMembers(config.bot.serverPath);
 			if (members != null){
 				members.forEach( element => {
@@ -215,6 +221,12 @@ function set(config, target, name){
 
 	switch (target) {
 		case "world":
+
+			var is_online = getServerStatus("minecraft");
+			if (is_online){
+				return "[Error] Server must be stopped before changing map.";
+			}
+
 			var worldInfo = getCurrentWorld(config.bot.serverPath);
 			var current = worldInfo.world;
 
@@ -257,7 +269,10 @@ function status(config){
 	var currentWorld = worldInfo.world;
 	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
-	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :\n"+list(config, "users");
+	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version;
+	if (serverStatus){
+		out = out + "\n\nOnline :\n" + list(config, "users")
+	}
 	return out;
 }
 
