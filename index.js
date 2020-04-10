@@ -333,13 +333,13 @@ function getServerStatus(name){
 
 function getWorldList(serverPath){
 	var output = execSync(`ls ${serverPath}/maps`).toString();
-	console.log("versions: "+output);
+	console.log("versions:\n"+output);
 	var versions = null;
 	var worlds = null;
 	if (output){
 		output = output.split("\n");
 		console.log("after split: " + output);
-		output = output.pop();
+		output.pop();
 		console.log("after pop: "+ output);
 		output.forEach( element => {
 			if (element != ''){
@@ -355,7 +355,7 @@ function getWorldList(serverPath){
 				if (output){
 					output = output.split("\n");
 					console.log("after split: " + output);
-					output = output.pop();
+					output.pop();
 					console.log("after pop: "+ output);
 					output.forEach( element2 => {
 						if (element2 != ' '){
