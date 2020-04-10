@@ -225,11 +225,6 @@ function set(config, target, name){
 	switch (target) {
 		case "world":
 
-			var is_online = getServerStatus("minecraft");
-			if (is_online){
-				return "[Error] Server must be stopped before changing map.";
-			}
-
 			var worldInfo = getCurrentWorld(config.bot.serverPath);
 			var current = worldInfo.world;
 
@@ -407,7 +402,7 @@ function setWorld(serverPath, name){
 	var version = getVersion(list, name);
 	console.log("version: "+version);
 	console.log("before: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
-	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}\n/" ${serverPath}/server.properties`);
+	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}\\n/" ${serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
 }
 
@@ -432,5 +427,5 @@ String.prototype.padding = function(n, c)
 };
 
 function removeWhitespace(string){
-	return string.replace(/((\r\n)+|\r+|\n+|\t+|\s+)/gm, "");
+	return string.replace(/((\r\n)+|\r+|\n+|\t+|\s+|(\n\r)+)/gm, "");
 }
