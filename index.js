@@ -298,10 +298,15 @@ function getMembers(serverPath){
 	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 
 	members = members.split(':');
-	members = members[4];
-	if (members.length > 3){
-		members = members.split(',');
-		console.log(members);
+	if (members.length == 5){
+		members = members[4];
+		if (members.length > 3){
+			members = members.split(',');
+			console.log(members);
+		}
+		else {
+			members = null;
+		}
 	}
 	else{
 		members = null;
