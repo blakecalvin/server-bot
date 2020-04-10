@@ -229,10 +229,8 @@ function start(config, msg){
 	var version = worldInfo.version; 
 	execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
 	msg.channel.send(`[Info] Starting server, please wait...`);
-	setTimeout(function(){
-		status = getServerStatus("minecraft");
-		return status;
-	}, 3000);
+	status = getServerStatus("minecraft");
+	return status;
 }
 
 function status(config){
@@ -259,10 +257,8 @@ function stop(msg){
 	}
 	execSync(`bash ./scripts/stop_server.sh`);
 	msg.channel.send(`[Info] Stopping server, please wait...`);
-	setTimeout(function(){
-		status = getServerStatus("minecraft");
-		return status;
-	}, 3000);
+	status = getServerStatus("minecraft");
+	return status;
 }
 
 // -----------------[ GETTERS ]----------------------------------------------------------------------------------------------------
@@ -309,11 +305,9 @@ function getServerStatus(name){
 		case "minecraft":
 			try {
 				status = execSync(`screen -ls | grep minecraft`).toString();
-				console.log(status);
 				return true;
 			}
 			catch(error){
-				console.error(error);
 				return false;
 			}
 			break;
