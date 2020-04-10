@@ -165,7 +165,7 @@ function list(config, target){
 
 			var header = "\nName:".padding(15) + "Version:";
 			out = out + header;
-			
+
 			var keys = Object.keys(list);
 			keys.forEach( element => {
 				if (element != " " && list[element]){ 
@@ -228,13 +228,11 @@ function start(config, msg){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
 	execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
-
+	msg.channel.send(`[Info] Starting server, please wait...`);
 	setTimeout(function(){
-		msg.channel.send(`[Info] Starting server, please wait...`);
+		status = getServerStatus("minecraft");
+		return status;
 	}, 3000);
-	status = getServerStatus("minecraft");
-
-	return status;
 }
 
 function status(config){
@@ -260,13 +258,11 @@ function stop(msg){
 		return null;
 	}
 	execSync(`bash ./scripts/stop_server.sh`);
-
+	msg.channel.send(`[Info] Stopping server, please wait...`);
 	setTimeout(function(){
-		msg.channel.send(`[Info] Stopping server, please wait...`);
+		status = getServerStatus("minecraft");
+		return status;
 	}, 3000);
-	status = getServerStatus("minecraft");
-	
-	return status;
 }
 
 // -----------------[ GETTERS ]----------------------------------------------------------------------------------------------------
