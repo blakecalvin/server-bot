@@ -112,7 +112,7 @@ client.on("message", msg => {
 						else if (serverStatus != null){
 							out = `[Success] Server stopped.`;
 						}
-					}, 500);
+					}, 1000);
 				}
 				break;
 			default:
