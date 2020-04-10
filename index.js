@@ -202,15 +202,15 @@ function set(config, target, name){
 
 			var worlds = getWorldList(config.bot.serverPath);
 
-			if (current == content[3]){
-				out = "[Error] current world already set to `" + content[3] + "`." ;
+			if (current == name){
+				out = "[Error] current world already set to `" + name + "`." ;
 			}
-			else if (!checkWorldList(worlds, content[3])){
-				out = "[Error] `"+content[3]+"` not in `maps` directory.";
+			else if (!checkWorldList(worlds, name)){
+				out = "[Error] `"+name+"` not in `maps` directory.";
 			}
 			else {
-				setWorld(config.bot.serverPath, content[3]);
-				out = "World set to `" + content[3] + "`\nStart/restart server to play.";
+				setWorld(config.bot.serverPath, name);
+				out = "World set to `" + name + "`\nStart/restart server to play.";
 			}
 			break;
 		default:
