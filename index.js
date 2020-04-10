@@ -240,7 +240,8 @@ function set(config, target, name){
 function start(config, msg){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
-	execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`);
+	var output = execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`).toString();
+	console.log(output);
 	msg.channel.send(`[Info] Starting server, please wait...`);
 }
 
@@ -281,9 +282,7 @@ function getCurrentWorld(serverPath){
 
 function getMembers(serverPath){
 
-	setTimeout(function(){
-		execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
-	}, 50);
+	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
 
 	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
 
