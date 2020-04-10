@@ -135,7 +135,7 @@ function  backup(serverPath){
 	var output = getCurrentWorld(serverPath);
 	var version = output.version;
 	var name = output.world;
-	execSync(`bash ./scripts/backup.sh ${config.bot.serverPath} ${version} ${name}`);
+	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}$(date +.%m-%d-%Y_%H:%M).tar.gz ${serverPath}/maps/${version}/${name}`);
 }
 
 function help(){
@@ -252,9 +252,7 @@ function set(config, target, name){
 function start(config, msg){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
-	var output = execSync(`cd ${config.bot.serverPath}; screen -dmS minecraft bash -c 'java -Xmx2G -Xms1G -jar forge-${version}.jar nogui';`);
-	//output = execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`).toString();
-	console.log(output);
+	execSync(`cd ${config.bot.serverPath}; screen -dmS minecraft bash -c 'java -Xmx2G -Xms1G -jar forge-${version}.jar nogui';`);
 	msg.channel.send(`[Info] Starting server, please wait...`);
 }
 
@@ -278,7 +276,8 @@ function status(config){
 }
 
 function stop(msg){
-	execSync(`bash ./scripts/stop_server.sh`);
+	execSync(`screen -S minecraft -p 0 -X stuff "save-all^M"`);
+	execSync(`screen -S minecraft -p 0 -X stuff "stop^M"`);
 	msg.channel.send(`[Info] Stopping server, please wait...`);
 }
 
