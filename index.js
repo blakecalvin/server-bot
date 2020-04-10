@@ -91,7 +91,7 @@ client.on("message", msg => {
 						else {
 							out = `[Error] encountered error starting server.`;
 						}
-					}, 500);
+					}, 1000);
 				}
 				break;
 			case 'status':
@@ -121,7 +121,7 @@ client.on("message", msg => {
 		}
 		setTimeout(() => {
 			msg.channel.send(out);
-		}, 1000);
+		}, 1500);
 	}
 });
 
@@ -308,7 +308,7 @@ function getServerStatus(name){
 	switch (name) {
 		case "minecraft":
 			try {
-				status = execSync(`screen -ls | grep minecraft`).toString();
+				var output = execSync(`screen -ls | grep minecraft`).toString();
 				return true;
 			}
 			catch(error){
