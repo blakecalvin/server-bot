@@ -43,7 +43,7 @@ client.on("message", msg => {
 				var valid = true;
 				switch (content[2]) {
 					case "mods":
-						out = "**Mods**\n```";
+						out = "**Mods**\n";
 						break;
 					case "worlds":
 						out = "**Worlds**\n```";
@@ -160,7 +160,7 @@ function list(config, target){
 			var current = worldInfo.world;
 			current = current.replace(/(\r\n|\n|\r)/gm, "");
 		
-			out = "Current World: " + current + "\nVersion: " + version + "\n\nAll Worlds:";
+			out = "Current World: " + current + "\nVersion: " + version + "\n\nAll Worlds:\n\nName:\t\tVersion:";
 
 			var list = getWorldList(config.bot.serverPath);
 			console.log("list: " + JSON.stringify(list, null, 4));
@@ -169,10 +169,7 @@ function list(config, target){
 			var keys = Object.keys(list);
 			keys.forEach( element => {
 				if (element != " " && list[element]){
-					out = out + "\n" + list[element];
-					list[element].forEach( element2 => {
-						out = out + "\n    - " + element2;
-					});
+					out = out + "\n" + list[element].name + "\t\t" + list[element].version; 
 				}
 			});
 			break;
@@ -255,7 +252,7 @@ function status(config){
 	var currentWorld = worldInfo.world;
 	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
-	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :"+list("users", config);
+	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version+"\n\nOnline :"+list(config, "users");
 	return out;
 }
 
@@ -342,47 +339,43 @@ function getWorldList(serverPath){
 	if (output){
 		output = output.split("\n");
 		console.log("after split: " + output);
-		output = output.splice(output.length-1,1);
-		console.log("after splice: "+ output);
+		output = output.pop();
+		console.log("after pop: "+ output);
 		output.forEach( element => {
 			if (element != ''){
 				element = element.replace(/(\r\n|\n|\r)/gm, "");	
 			}
 		});
 		versions = output;
+		console.log("versions: "+versions);
 		worlds = {};
 		versions.forEach( element => {
-			worlds[element] = [];
-			output = execSync(`ls ${serverPath}/maps/${element}`).toString();
-			if (output){
-				output = output.split("\n");
-				console.log("after split: " + output);
-				output = output.splice(output.length-1,1);
-				console.log("after splice: "+ output);
-				output.forEach( element2 => {
-					if (element2 != ''){
-						element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
-					}
-				});
-				worlds[element] = output;
+			if (element != ' '){
+				output = execSync(`ls ${serverPath}/maps/${element}`).toString();
+				if (output){
+					output = output.split("\n");
+					console.log("after split: " + output);
+					output = output.pop();
+					console.log("after pop: "+ output);
+					output.forEach( element2 => {
+						if (element2 != ' '){
+							element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
+							worlds[element2] = {
+								name : element2,
+								version : element
+							};
+						}
+					});
+				}
 			}
 		})
 	}
+	console.log("worlds: "+JSON.stringify(worlds, null, 4));
 	return worlds;
 }
 
 function getVersion(list, name){
-	var keys = Object.keys(list);
-	keys.forEach( element => {
-		if (element != " " && list[element]){
-			list[element].forEach( element2 => {
-				if (element2 == name){
-					return element;
-				}
-			});
-		}
-	});
-	return false;
+	return list[name].version;
 }
 
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
@@ -398,12 +391,8 @@ function setWorld(serverPath, name){
 function checkWorldList(list, name){
 	var keys = Object.keys(list);
 	keys.forEach( element => {
-		if (element != " " && list[element]){
-			list[element].forEach( element2 => {
-				if (element2 == name){
-					return true;
-				}
-			});
+		if (element == name){
+			return true;
 		}
 	});
 	return false;
