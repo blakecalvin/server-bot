@@ -194,7 +194,7 @@ function list(config, target){
 		case "users":
 
 			var is_online = getServerStatus("minecraft");
-			if (is_online){
+			if (!is_online){
 				return "[Error] No server running.";
 			}	
 
@@ -252,7 +252,8 @@ function set(config, target, name){
 function start(config, msg){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var version = worldInfo.version; 
-	var output = execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`).toString();
+	var output = execSync(`cd ${config.bot.serverPath}; screen -dmS minecraft bash -c 'java -Xmx2G -Xms1G -jar forge-${version}.jar nogui';`);
+	//output = execSync(`bash ./scripts/start_server.sh ${config.bot.serverPath} ${version}`).toString();
 	console.log(output);
 	msg.channel.send(`[Info] Starting server, please wait...`);
 }
@@ -270,7 +271,7 @@ function status(config){
 	currentWorld = currentWorld.replace(/(\r\n|\n|\r)/gm, "");
 
 	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version;
-	if (serverStatus){
+	if (is_online){
 		out = out + "\n\nOnline :\n" + list(config, "users")
 	}
 	return out;
