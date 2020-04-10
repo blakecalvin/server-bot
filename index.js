@@ -127,11 +127,11 @@ function help(){
 	├─ backup  : make backup of current world.
 	├─ info    : show server info (IPv4, MC world/version)
 	├─ list [target]
-	│         ├─ modpacks: show modpack for each version
+	│         ├─ mods: show modpack for each version
 	│         ├─ worlds  : show current and available worlds
 	│         └─ users   : show server members
 	├─ set [target]
-	│         └─ world [name]: set current world (under maintenance)
+	│         └─ world [name]: set current world
 	├─ start   : start server
 	├─ status  : show server status, IP address, 
 	│ 			     current world and online members
@@ -163,7 +163,7 @@ function list(config, target){
 			out = "Current World: " + current + "\nVersion: " + version + "\n\nAll Worlds:";
 
 			var list = getWorldList(config.bot.serverPath);
-			console.log("list: " + list.toString());
+			console.log("list: " + JSON.stringify(list, null, 4));
 			console.log("keys: " + Object.keys(list).toString());
 
 			var keys = Object.keys(list);
@@ -335,13 +335,15 @@ function getServerStatus(name){
 }
 
 function getWorldList(serverPath){
-	var output = execSync(`ls ${serverPath}/maps/`).toString();
+	var output = execSync(`ls ${serverPath}/maps`).toString();
+	console.log("versions: "+output);
 	var versions = null;
 	var worlds = null;
 	if (output){
 		output = output.split("\n");
+		console.log("after split: " + output);
 		output = output.splice(output.length-1,1);
-		console.log(output);
+		console.log("after splice: "+ output);
 		output.forEach( element => {
 			if (element != ''){
 				element = element.replace(/(\r\n|\n|\r)/gm, "");	
@@ -354,8 +356,9 @@ function getWorldList(serverPath){
 			output = execSync(`ls ${serverPath}/maps/${element}`).toString();
 			if (output){
 				output = output.split("\n");
+				console.log("after split: " + output);
 				output = output.splice(output.length-1,1);
-				console.log(output);
+				console.log("after splice: "+ output);
 				output.forEach( element2 => {
 					if (element2 != ''){
 						element2 = element2.replace(/(\r\n|\n|\r)/gm, "");	
