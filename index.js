@@ -135,8 +135,10 @@ function  backup(serverPath){
 	var output = getCurrentWorld(serverPath);
 	var version = output.version;
 	var name = output.world;
+	console.log("world: " + name);
+	console.log("version: " + version);
 	var date = getDate();
-	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}_${date}.tar.gz ${serverPath}/maps/${version}/${name}`);
+	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}_${date}.tar.gz ${serverPath}/maps/${version}/${name}/`);
 }
 
 function help(){
@@ -290,6 +292,8 @@ function getCurrentWorld(serverPath){
 	current.forEach( element => {
 		element = element.replace(/(\r\n|\n|\r)/gm, "");
 	});
+	console.log(current[0]);
+	console.log(current[1]);
 	return {
 		version: current[0],
 		world: current[1]
