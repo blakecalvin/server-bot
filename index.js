@@ -135,6 +135,7 @@ function  backup(serverPath){
 	var output = getCurrentWorld(serverPath);
 	var version = output.version;
 	var name = output.world;
+	name = removeWhitespace(name);
 	console.log("world: " + name);
 	console.log("version: " + version);
 	var date = getDate();
@@ -402,7 +403,7 @@ function setWorld(serverPath, name){
 	var version = getVersion(list, name);
 	console.log("version: "+version);
 	console.log("before: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
-	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}\\n/" ${serverPath}/server.properties`);
+	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
 }
 
