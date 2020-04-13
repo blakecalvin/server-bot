@@ -9,5 +9,6 @@
         "serverIP": "IPv4",
         "serverPath": "path/to/server",
         "modsURL": "URL for mods"
+        "serverInfoText": "A server."
     }
 }

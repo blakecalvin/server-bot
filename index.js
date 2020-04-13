@@ -238,7 +238,7 @@ function set(config, target, name){
 				out = "[Error] `"+name+"` not in `maps` directory.";
 			}
 			else {
-				setWorld(config.bot.serverPath, name);
+				setWorld(config, name);
 				out = "World set to `" + name + "`\nStart/restart server to play.";
 			}
 			break;
@@ -399,12 +399,15 @@ function getDate(){
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
 
 function setWorld(serverPath, name){
-	var list = getWorldList(serverPath);
+	var list = getWorldList(config.bot.serverPath);
 	var version = getVersion(list, name);
 	console.log("version: "+version);
-	console.log("before: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
+	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${serverPath}/server.properties`);
-	console.log("after: " + execSync(`cat ${serverPath}/server.properties | grep level-name`).toString());
+	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
+	execSync(`sed -i "s/motd=.*/motd=\\u00a75\\u00a7l${config.bot.serverInfoText}\\u00a7r\\u00a7l\\n\\u00a7d\\u00a7lMAP: \\u00a7r${name}\\u00a7d\\u00a7l VERSION: \\u00a7r${version}/" ${serverPath}/server.properties`);
+	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 }
 
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
