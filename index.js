@@ -398,7 +398,7 @@ function getDate(){
 
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
 
-function setWorld(name){
+function setWorld(config, name){
 	var list = getWorldList(config.bot.serverPath);
 	var version = getVersion(list, name);
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
