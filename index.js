@@ -409,8 +409,8 @@ function setWorld(config, name){
 	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${config.bot.serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
-	execSync(`sed "s/${currentWorld}/${name}/gm" ${config.bot.serverPath}/server.properties`);
-	execSync(`sed "s/${currentVersion}/${version}/gm" ${config.bot.serverPath}/server.properties`);
+	execSync(`sed "s|${currentWorld}|${name}|gm" ${config.bot.serverPath}/server.properties`);
+	execSync(`sed "s|${currentVersion}|${version}|gm" ${config.bot.serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 }
 
