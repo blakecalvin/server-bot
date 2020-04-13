@@ -398,15 +398,19 @@ function getDate(){
 
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
 
-function setWorld(serverPath, name){
+function setWorld(name){
 	var list = getWorldList(config.bot.serverPath);
 	var version = getVersion(list, name);
+	var worldInfo = getCurrentWorld(config.bot.serverPath);
+	var currentVersion = worldInfo.version;
+	var currentWorld = worldInfo.world;
 	console.log("version: "+version);
 	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${config.bot.serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
-	execSync(`sed -i "s/motd=.*/motd=\\\\u00a75\\\\u00a7l${config.bot.serverInfoText}\\\\u00a7r\\\\u00a7l\\\\n\\\\u00a7d\\\\u00a7lMAP: \\\\u00a7r${name}\\\\u00a7d\\\\u00a7l VERSION: \\\\u00a7r${version}/" ${config.bot.serverPath}/server.properties`);
+	execSync(`sed -i "s/${currentWorld}/${name}/" ${config.bot.serverPath}/server.properties`);
+	execSync(`sed -i "s/${currentVersion}/${version}/" ${config.bot.serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 }
 
