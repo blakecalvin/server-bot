@@ -534,8 +534,8 @@ function checkWorldList(list, name){
 function checkVersion(serverPath, version){
 	var versions = execSync(`ls ${serverPath}/maps/`).toString()
 	versions = versions.split('\n');
-	versions = removeWhitespace(versions);
 	versions.forEach( element => {
+		element = removeWhitespace(element);
 		if (element == version){
 			return true;
 		}
