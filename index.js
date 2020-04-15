@@ -534,12 +534,12 @@ function checkWorldList(list, name){
 function checkVersion(serverPath, version){
 	var versions = execSync(`ls ${serverPath}/maps/`).toString()
 	versions = versions.split('\n');
-	versions.forEach( element => {
-		element = removeWhitespace(element);
-		if (element == version){
+	for (let i = 0; i < versions.length; i++){
+		versions[i] = removeWhitespace(versions[i]);
+		if (versions[i] == version){
 			return true;
 		}
-	});
+	}
 	return false;
 }
 
