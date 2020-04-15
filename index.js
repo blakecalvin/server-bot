@@ -516,11 +516,11 @@ function setWorld(config, name){
 
 function isAdmin(admins, userId){
 	keys = Object.keys(admins);
-	keys.forEach( element => {
-		if ( admins[element] == userId ){
+	for (let i = 0; i < keys.length; i++){
+		if ( admins[keys[i]] == userId ){
 			return true;
 		}
-	});
+	}
 	return false;
 }
 
