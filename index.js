@@ -52,7 +52,7 @@ client.on("message", msg => {
 				out = "**Usage:**\n```" + Discord.escapeMarkdown(help(), true) + "```";
 				break;
 			case 'backup':
-				if (isAdmin(msg.author.id)){
+				if (isAdmin(config.bot.admins, msg.author.id)){
 					backup(config.bot.serverPath);
 					out = `[Info] Made backup of current world.`;
 				} 
@@ -61,7 +61,7 @@ client.on("message", msg => {
 				}
 				break;
 			case 'create':
-				if (isAdmin(msg.author.id)){
+				if (isAdmin(config.bot.admins, msg.author.id)){
 					if (content[2] && content[3]){
 						out = createWorld(config, content[2], content[3]);
 					}
@@ -514,8 +514,7 @@ function setWorld(config, name){
 
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
 
-function isAdmin(config, userId){
-	var admins = config.bot.admins
+function isAdmin(admins, userId){
 	keys = Object.keys(admins);
 	keys.forEach( element => {
 		if ( admins[element] == userId ){
