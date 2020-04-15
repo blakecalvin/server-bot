@@ -1,4 +1,3 @@
-const { exec } = require('child_process');
 const execSync =  require('child_process').execSync;
 const fs = require("fs");
 const Discord = require("discord.js");
@@ -8,20 +7,40 @@ config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 client.config = config.discord;
 
 const BOT = config.bot.botName;
-var current_world = '';
-
-const options = {
-	split: {
-		char: "\n",
-		prepend: "```",
-		append: "```"
-	}
-}
 
 const emoji = {
 	online: "🟢",
-	offline: "🔴"
+	offline: "🔴",
+	sadFace: "☹️"
 }
+
+const msgs =  {
+	adminOnly: "[Info] This command is for Server Admins Only."
+}
+
+/*
+	-- COMMANDS --
+
+	${BOT}> [command]
+	├─ help    : usage/command list
+	├─ backup  : make backup of current world (admin-only)
+	├─ create [name] [version] : create new world (admin-only)
+	├─ info    : show server info (IPv4, MC world/version)
+	├─ list [target]
+	│         ├─ admins  : show server admins
+	│         ├─ mods    : show modpack for each version
+	│         ├─ worlds  : show current and available worlds
+	│         └─ users   : show server members
+	├─ msg [text] : message server (TODO)
+	├─ restart : restart server
+	├─ set [target]
+	│         ├─ admin [name]: set user as admin (admin-only) (TODO)
+	│         └─ world [name]: set current world
+	├─ start   : start server
+	├─ status  : show server status, IP address, 
+	│ 			     current world and online members
+	└─ stop    : stop server
+*/
 
 client.on("message", msg => {
 	var content = msg.content.split(' ')
@@ -33,8 +52,26 @@ client.on("message", msg => {
 				out = "**Usage:**\n```" + Discord.escapeMarkdown(help(), true) + "```";
 				break;
 			case 'backup':
-				backup(config.bot.serverPath);
-				out = `[Info] Made backup of current world.`;
+				if (isAdmin(msg.author.id)){
+					backup(config.bot.serverPath);
+					out = `[Info] Made backup of current world.`;
+				} 
+				else {
+					out = msgs.adminOnly;
+				}
+				break;
+			case 'create':
+				if (isAdmin(msg.author.id)){
+					if (content[2] && content[3]){
+						out = createWorld(config, content[2], content[3]);
+					}
+					else {
+						out = "[Error] `"+content[1]+"` requires name and version.\nUse `"+BOT+"> help` for usage.";
+					}
+				} 
+				else {
+					out = msgs.adminOnly;
+				}
 				break;
 			case 'info':
 				out = "**Server Info:**\n```" + Discord.escapeMarkdown(info(config), true) + "```";
@@ -42,6 +79,9 @@ client.on("message", msg => {
 			case 'list':
 				var valid = true;
 				switch (content[2]) {
+					case "admins":
+						out = "**Admins**```";
+					break;
 					case "mods":
 						out = "**Mods**\n";
 						break;
@@ -49,7 +89,7 @@ client.on("message", msg => {
 						out = "**Worlds**\n```";
 						break;
 					case "users":
-						out = "**Users**\n```";
+						out = "**Users**```";
 						break;
 					default:
 						valid = false;
@@ -61,19 +101,42 @@ client.on("message", msg => {
 					out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
 				}
 				break;
+			case 'restart':
+				serverStatus = getServerStatus("minecraft");
+				if (serverStatus){
+					stop(msg);
+				}
+				setTimeout(() => {
+					start(config, msg);	
+				}, 500);
+				setTimeout(() => { 
+					serverStatus = getServerStatus("minecraft");
+					if (serverStatus){
+						out = `[Success] Server restarted.`;
+					}
+					else {
+						out = `[Error] encountered error restarting server.`;
+					}
+				}, 1000);
+				break;
 			case 'set':
-				switch (content[2]) {
-					case "world":
-						if (content[3]){
-							out = set(config, content[2], content[3]);
-						}
-						else{
-							out = "[Error] `"+content[1]+" "+content[2]+"` requires name.\nUse `"+BOT+"> help` for usage.";
-						}
-						break;
-					default:
-						out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
-						break;	
+				if (content[2]){
+					switch (content[2]) {
+						case "world":
+							if (content[3]){
+								out = set(config, content[2], content[3]);
+							}
+							else{
+								out = "[Error] `"+content[1]+" "+content[2]+"` requires name.\nUse `"+BOT+"> help` for usage.";
+							}
+							break;
+						default:
+							out = "[Error] target `"+content[2]+"` not recognized.\nUse `"+BOT+"> help` for usage.";
+							break;	
+					}
+				}
+				else {
+					out = "[Error] `"+content[1]+"` requires target.\nUse `"+BOT+"> help` for usage.";
 				}
 				break;
 			case 'start':
@@ -136,21 +199,49 @@ function  backup(serverPath){
 	var version = output.version;
 	var name = output.world;
 	name = removeWhitespace(name);
-	console.log("world: " + name);
-	console.log("version: " + version);
 	var date = getDate();
 	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}_${date}.tar.gz ${serverPath}/maps/${version}/${name}/`);
+}
+
+function createWorld(config, name, version){
+	var worlds = getWorldList(config.bot.serverPath);
+
+	if (checkWorldList(worlds, name)){
+		out = "[Error] `"+name+"` is already used.";
+	}
+	else if (!checkVersion(config.bot.serverPath, version)){
+		out = "[Error] version: `"+version+"` not supported.";
+	}
+	else {
+		var worldInfo = getCurrentWorld(config.bot.serverPath);
+		var currentVersion = removeWhitespace(worldInfo.version);
+		var currentWorld = removeWhitespace(worldInfo.world);
+
+		console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+		execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${config.bot.serverPath}/server.properties`);
+		console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+		
+		console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
+		execSync(`sed -i 's/${currentWorld}/${name}/g' ${config.bot.serverPath}/server.properties`);
+		execSync(`sed -i 's/${currentVersion}/${version}/g' ${config.bot.serverPath}/server.properties`);
+		console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
+		out = "[Success] Map: `"+name+"` Version: `"+version+"` created.\nRestart server to play."
+	}
+	return out;
 }
 
 function help(){
 	const cmds = `${BOT}> [command]
 	├─ help    : usage/command list
-	├─ backup  : make backup of current world.
+	├─ backup  : make backup of current world (admin-only)
+	├─ create [name] [version] : create new world (admin-only)
 	├─ info    : show server info (IPv4, MC world/version)
 	├─ list [target]
-	│         ├─ mods: show modpack for each version
+	│         ├─ admins  : show server admins
+	│         ├─ mods    : show modpack for each version
 	│         ├─ worlds  : show current and available worlds
 	│         └─ users   : show server members
+	├─ restart : restart server
 	├─ set [target]
 	│         └─ world [name]: set current world
 	├─ start   : start server
@@ -172,6 +263,13 @@ function info(config){
 function list(config, target){
 	var out = "";
 	switch (target) {
+		case "admins":
+			var admins = config.bot.admins;
+			admins = Object.keys(admins);
+			admins.forEach( element => {
+				out = out + "\n  🤓 : " + element; 
+			});
+			break;
 		case "mods":
 			out = "Download Here:\n" + config.bot.modsURL;
 			break;
@@ -184,6 +282,7 @@ function list(config, target){
 			out = "Current World : " + current + "\nVersion : " + version + "\n\n- All Worlds : -------";
 
 			var list = getWorldList(config.bot.serverPath);
+			console.log("worlds: "+JSON.stringify(list, null, 4));
 
 			var header = "\nName:".padding(15) + "Version:";
 			out = out + header;
@@ -209,7 +308,7 @@ function list(config, target){
 				});
 			}
 			else {
-				out = "None. You's alone ☹️"
+				out = "\nNone. You's alone " + emoji.sadFace;
 			}
 			break;
 		default:
@@ -225,7 +324,6 @@ function set(config, target, name){
 
 	switch (target) {
 		case "world":
-
 			var worldInfo = getCurrentWorld(config.bot.serverPath);
 			var current = worldInfo.world;
 
@@ -269,7 +367,7 @@ function status(config){
 
 	out = "Server : "+serverStatus+"\nIPv4 : "+ip+"\nWorld : "+currentWorld+"\nVersion : "+version;
 	if (is_online){
-		out = out + "\n\nOnline :\n" + list(config, "users")
+		out = out + "\n\nOnline :" + list(config, "users")
 	}
 	return out;
 }
@@ -296,11 +394,21 @@ function getCurrentWorld(serverPath){
 	};
 }
 
+function getDate(){
+	let date_ob = new Date();
+	let date = ("0" + date_ob.getDate()).slice(-2);
+	let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+	let year = date_ob.getFullYear();
+	let hours = date_ob.getHours();
+	let minutes = date_ob.getMinutes();
+	return month + "-" + date + "-" + year + "_" + hours + ":" + minutes;
+}
+
 function getMembers(serverPath){
 
 	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
 
-	var members = execSync(`tail -n 1 ${serverPath}/logs/latest.log`).toString();
+	var members = execSync(`tail -n 5 ${serverPath}/logs/latest.log | grep -m 1 players`).toString();
 
 	members = members.split(':');
 	if (members.length == 5){
@@ -378,22 +486,11 @@ function getWorldList(serverPath){
 			}
 		})
 	}
-	console.log("worlds: "+JSON.stringify(worlds, null, 4));
 	return worlds;
 }
 
 function getVersion(list, name){
 	return list[name].version;
-}
-
-function getDate(){
-	let date_ob = new Date();
-	let date = ("0" + date_ob.getDate()).slice(-2);
-	let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-	let year = date_ob.getFullYear();
-	let hours = date_ob.getHours();
-	let minutes = date_ob.getMinutes();
-	return month + "-" + date + "-" + year + "_" + hours + ":" + minutes;
 }
 
 // -----------------[ SETTERS ]----------------------------------------------------------------------------------------------------
@@ -404,10 +501,11 @@ function setWorld(config, name){
 	var worldInfo = getCurrentWorld(config.bot.serverPath);
 	var currentVersion = removeWhitespace(worldInfo.version);
 	var currentWorld = removeWhitespace(worldInfo.world);
-	console.log("version: "+version);
+
 	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 	execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${config.bot.serverPath}/server.properties`);
 	console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+	
 	console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 	execSync(`sed -i 's/${currentWorld}/${name}/g' ${config.bot.serverPath}/server.properties`);
 	execSync(`sed -i 's/${currentVersion}/${version}/g' ${config.bot.serverPath}/server.properties`);
@@ -416,10 +514,32 @@ function setWorld(config, name){
 
 // -----------------[ UTILS ]------------------------------------------------------------------------------------------------------
 
+function isAdmin(config, userId){
+	var admins = config.bot.admins
+	admins.forEach( element => {
+		if ( admins[element] == userId ){
+			return true;
+		}
+	});
+	return false;
+}
+
 function checkWorldList(list, name){
 	if (list[name] != null){
 		return true;
 	}
+	return false;
+}
+
+function checkVersion(serverPath, version){
+	var versions = execSync(`ls ${serverPath}/maps/`).toString()
+	versions = versions.split('\n');
+	versions = removeWhitespace(versions);
+	versions.forEach( element => {
+		if (element == version){
+			return true;
+		}
+	});
 	return false;
 }
 

@@ -5,10 +5,13 @@
         "token": "BotToken"
     },
     "bot": {
+        "admins": {
+            "name": "UserID",
+            "name": "UserID"
+        },
         "botName": "Name of Bot",
+        "modsURL": "URL for mods",
         "serverIP": "IPv4",
         "serverPath": "path/to/server",
-        "modsURL": "URL for mods"
-        "serverInfoText": "A server."
     }
 }
