@@ -516,7 +516,8 @@ function setWorld(config, name){
 
 function isAdmin(config, userId){
 	var admins = config.bot.admins
-	admins.forEach( element => {
+	keys = Object.keys(admins);
+	keys.forEach( element => {
 		if ( admins[element] == userId ){
 			return true;
 		}
