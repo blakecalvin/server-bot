@@ -11,7 +11,8 @@ const BOT = config.bot.botName;
 const emoji = {
 	online: "🟢",
 	offline: "🔴",
-	sadFace: "☹️"
+	sadFace: "☹️",
+	admin: "🤓"
 }
 
 const msgs =  {
@@ -269,7 +270,7 @@ function list(config, target){
 			var admins = config.bot.admins;
 			admins = Object.keys(admins);
 			admins.forEach( element => {
-				out = out + "\n  🤓 : " + element; 
+				out = out + "\n  "+emoji.admin+" : " + element; 
 			});
 			break;
 		case "mods":
