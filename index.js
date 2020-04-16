@@ -407,24 +407,26 @@ function getDate(){
 function getMembers(serverPath){
 
 	execSync(`screen -S minecraft -p 0 -X stuff \"list^M\"`);
-
-	var members = execSync(`tail -n 5 ${serverPath}/logs/latest.log | grep -m 1 players`).toString();
-
-	members = members.split(':');
-	if (members.length == 5){
-		members = members[4];
+	var members = null;
+	setTimeout(() => {
+		try {
+			members = execSync(`tail -n 5 ${serverPath}/logs/latest.log | grep -m 1 players`).toString();
+			members = members.split(':');
+			members = members[4];
+		} 
+		catch (error){
+			members = null;
+		}
+	}, 200);
+	setTimeout(() => {
 		if (members.length > 3){
 			members = members.split(',');
 		}
 		else {
 			members = null;
 		}
-	}
-	else{
-		members = null;
-	}
-
-	return members;
+		return members;
+	}, 300);	
 }
 
 function getServerStatus(name){
