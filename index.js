@@ -385,14 +385,11 @@ function stop(msg){
 function getCurrentWorld(serverPath){
 	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \" \" a[3]}\'`).toString();
 	current = current.split(" ");
-	for (let i = 0; i < current; i++){
-		current[i] = removeWhitespace(current[i]);
-	}
-	console.log("Version: "+current[0]);
-	console.log("World: "+current[1]);
+	console.log("Version: "+removeWhitespace(current[0]));
+	console.log("World: "+removeWhitespace(current[1]));
 	return {
-		version: current[0],
-		world: current[1]
+		version: removeWhitespace(current[0]),
+		world: removeWhitespace(current[1])
 	};
 }
 
