@@ -201,6 +201,7 @@ function  backup(serverPath){
 	name = removeWhitespace(name);
 	var date = getDate();
 	execSync(`tar -czvf ${serverPath}/backups/${version}/${name}_${date}.tar.gz ${serverPath}/maps/${version}/${name}/`);
+	console.log("[backup()] of \'"+name+"\' \'v"+version+"\' @ "+date);
 }
 
 function createWorld(config, name, version){
@@ -217,14 +218,15 @@ function createWorld(config, name, version){
 		var currentVersion = removeWhitespace(worldInfo.version);
 		var currentWorld = removeWhitespace(worldInfo.world);
 
-		console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+		console.log("[createWorld()]")
+		console.log(" before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 		execSync(`sed -i "s/level-name=maps\\/.*/level-name=maps\\/${version}\\/${name}/" ${config.bot.serverPath}/server.properties`);
-		console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
+		console.log(" after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep level-name`).toString());
 		
-		console.log("before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
+		console.log(" before: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 		execSync(`sed -i 's/${currentWorld}/${name}/g' ${config.bot.serverPath}/server.properties`);
 		execSync(`sed -i 's/${currentVersion}/${version}/g' ${config.bot.serverPath}/server.properties`);
-		console.log("after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
+		console.log(" after: " + execSync(`cat ${config.bot.serverPath}/server.properties | grep motd`).toString());
 		out = "[Success] Map: `"+name+"` Version: `"+version+"` created.\nRestart server to play."
 	}
 	return out;
@@ -383,11 +385,11 @@ function stop(msg){
 function getCurrentWorld(serverPath){
 	var current = execSync(`cat ${serverPath}/server.properties | grep level-name | awk \'{split($0,a,\"/\"); print a[2] \" \" a[3]}\'`).toString();
 	current = current.split(" ");
-	current.forEach( element => {
-		element = removeWhitespace(element);
-	});
-	console.log(current[0]);
-	console.log(current[1]);
+	for (let i = 0; i < current; i++){
+		current[i] = removeWhitespace(current[i]);
+	}
+	console.log("Version: "+current[0]);
+	console.log("World: "+current[1]);
 	return {
 		version: current[0],
 		world: current[1]
